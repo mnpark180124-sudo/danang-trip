@@ -1,0 +1,15 @@
+{
+  "name": "다낭 여행 대시보드",
+  "short_name": "다낭여행",
+  "description": "가족 다낭 여행을 위한 실시간 정보 대시보드",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FAF6EF",
+  "theme_color": "#0B4F6C",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

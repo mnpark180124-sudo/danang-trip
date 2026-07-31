@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bel Marina Hoi An Resort · 다낭 여행</title>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#0B4F6C">
+<link rel="apple-touch-icon" href="../icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back" href="../index.html">← 대시보드로</a>
+  <p class="eyebrow">STAY 02 · HỘI AN</p>
+</div>
+
+<div class="wrap">
+
+  <div class="pass">
+    <div class="pass-head">
+      <div class="stub">BOARDING · STAY</div>
+      <div class="num">02</div>
+    </div>
+    <div class="pass-perf"></div>
+    <div class="pass-body">
+      <div class="pass-field">
+        <div class="lbl">숙박 기간</div>
+        <div class="val">8월 24일 – 8월 27일 (3박)</div>
+      </div>
+      <div class="pass-field">
+        <div class="lbl">숙소명</div>
+        <div class="val">Bel Marina Hoi An Resort</div>
+      </div>
+      <div class="pass-field">
+        <div class="lbl">주소</div>
+        <div class="val" id="addr">127 Nguyễn Phúc Tần, Hội An, Đà Nẵng 51309</div>
+      </div>
+      <div class="pass-actions">
+        <button class="act-maps" onclick="openMaps(document.getElementById('addr').textContent, 15.874476799999998, 108.32227840000002)">
+          📍<span>지도</span>
+        </button>
+        <button class="act-grab" onclick="openGrab()">
+          🚗<span>Grab</span>
+        </button>
+        <button class="act-copy" onclick="copyAddress(document.getElementById('addr').textContent, this)">
+          📋<span>주소복사</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="dot"></span>숙소 근처 맛집</h2>
+    <div id="stayMap"></div>
+    <div class="food-list" id="foodList"></div>
+  </div>
+
+</div>
+
+<div class="tabbar">
+  <a class="tab" href="../index.html"><span class="ic">🏠</span>홈</a>
+  <a class="tab" href="florence.html"><span class="ic">🛏️</span>숙소1</a>
+  <a class="tab active" href="belmarina.html"><span class="ic">🛏️</span>숙소2</a>
+  <a class="tab" href="hyatt.html"><span class="ic">🛏️</span>숙소3</a>
+  <a class="tab" href="altara.html"><span class="ic">🛏️</span>숙소4</a>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../app.js"></script>
+<script>
+  initStayMap(
+    { name: "Bel Marina Hoi An Resort", address: "127 Nguyễn Phúc Tần, Hội An, Đà Nẵng 51309", lat: 15.874476799999998, lng: 108.32227840000002 },
+    [{"name": "Morning Glory Waterfront Village", "address": "123 Nguyễn Phúc Tần, An Hội, Hội An", "lat": 15.874877299999998, "lng": 108.32312259999999, "rating": 4.7}, {"name": "Morning Glory Lounge Bar & Restaurant", "address": "41 Nguyen Phuc Chu, An Hội, Hội An", "lat": 15.8758774, "lng": 108.3261888, "rating": 4.7}, {"name": "Mê Hội An Rooftop Coffee & Kitchen", "address": "166 Trần Phú, Old Town, Hội An", "lat": 15.8771366, "lng": 108.3269249, "rating": 4.9}]
+  );
+</script>
+</body>
+</html>

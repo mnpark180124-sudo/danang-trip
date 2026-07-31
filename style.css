@@ -1,0 +1,315 @@
+/* ===== 다낭 여행 대시보드 — 디자인 토큰 =====
+   컨셉: 탑승권/수하물 태그(boarding pass) 모티프
+   - 바다색(#0B4F6C) + 산호빛 랜턴(#FF6B4A) + 모래빛 배경(#FAF6EF)
+*/
+:root{
+  --ocean-deep:#0B4F6C;
+  --ocean-mid:#136B8A;
+  --coral:#FF6B4A;
+  --sand:#FAF6EF;
+  --ink:#1A2E35;
+  --mint:#7FB3A0;
+  --gold:#E8A33D;
+  --line:rgba(26,46,53,0.12);
+  --card:#FFFFFF;
+  --radius:18px;
+  --shadow:0 10px 30px -12px rgba(11,79,108,0.35);
+  --font-display:'Bricolage Grotesque', 'Pretendard', sans-serif;
+  --font-body:'Inter', 'Pretendard', sans-serif;
+  --font-mono:'IBM Plex Mono', monospace;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--sand);
+  color:var(--ink);
+  font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:88px; /* tab bar */
+  min-height:100vh;
+  background-image:
+    radial-gradient(circle at 100% 0%, rgba(127,179,160,0.18), transparent 45%),
+    radial-gradient(circle at 0% 20%, rgba(255,107,74,0.10), transparent 40%);
+}
+
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;}
+
+/* ---------- 상단 헤더 ---------- */
+.topbar{
+  padding:22px 20px 16px;
+  background:var(--ocean-deep);
+  color:var(--sand);
+  border-radius:0 0 28px 28px;
+  box-shadow:var(--shadow);
+  position:relative;
+  overflow:hidden;
+}
+.topbar::after{
+  content:"";
+  position:absolute; right:-30px; top:-40px;
+  width:140px; height:140px; border-radius:50%;
+  background:radial-gradient(circle, rgba(255,107,74,0.55), transparent 70%);
+}
+.topbar .eyebrow{
+  font-family:var(--font-mono);
+  font-size:11px; letter-spacing:0.14em; text-transform:uppercase;
+  color:var(--mint); margin:0 0 6px;
+}
+.topbar h1{
+  font-family:var(--font-display);
+  font-size:26px; margin:0; font-weight:700; letter-spacing:-0.01em;
+  position:relative; z-index:1;
+}
+.topbar .sub{
+  font-size:13px; color:rgba(250,246,239,0.75); margin-top:6px; position:relative; z-index:1;
+}
+
+/* ---------- 컨테이너 ---------- */
+.wrap{padding:18px 16px 8px; max-width:520px; margin:0 auto;}
+
+/* ---------- 카드 공통 ---------- */
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:18px;
+  margin-bottom:16px;
+  box-shadow:0 4px 18px -8px rgba(26,46,53,0.14);
+  border:1px solid var(--line);
+}
+.card h2{
+  font-family:var(--font-display);
+  font-size:15px; margin:0 0 12px;
+  display:flex; align-items:center; gap:8px;
+  color:var(--ocean-deep);
+}
+.card h2 .dot{
+  width:8px;height:8px;border-radius:50%;background:var(--coral);
+}
+
+/* ---------- 환율 계산기 ---------- */
+.fx-row{display:flex; gap:10px; align-items:center; margin-bottom:10px;}
+.fx-input-group{flex:1; position:relative;}
+.fx-input-group input{
+  width:100%; padding:12px 14px; font-family:var(--font-mono); font-size:17px;
+  border:1.5px solid var(--line); border-radius:12px; background:var(--sand);
+  color:var(--ink);
+}
+.fx-input-group label{
+  font-size:11px; color:var(--ocean-mid); font-weight:600;
+  position:absolute; top:-8px; left:10px; background:var(--card);
+  padding:0 5px; letter-spacing:0.02em;
+}
+.fx-swap{
+  width:36px;height:36px;border-radius:50%;border:none;
+  background:var(--ocean-deep); color:var(--sand); font-size:15px;
+  cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+}
+.fx-rate{
+  font-family:var(--font-mono); font-size:12px; color:var(--ocean-mid);
+  text-align:center; margin-top:2px;
+}
+.fx-updated{font-size:11px; color:#9aa8ab; text-align:center; margin-top:4px;}
+
+/* ---------- 날씨 ---------- */
+.weather-now{display:flex; align-items:center; justify-content:space-between;}
+.weather-temp{font-family:var(--font-display); font-size:40px; font-weight:700; color:var(--ocean-deep);}
+.weather-desc{font-size:13px; color:var(--ink); opacity:0.75; margin-top:2px;}
+.weather-icon{font-size:44px;}
+.weather-days{display:flex; gap:10px; margin-top:14px; overflow-x:auto;}
+.wday{
+  flex:1; min-width:56px; text-align:center; background:var(--sand);
+  border-radius:12px; padding:10px 6px; font-size:12px;
+}
+.wday .d{font-weight:700; color:var(--ocean-mid); margin-bottom:4px;}
+.wday .i{font-size:20px; margin-bottom:2px;}
+
+/* ---------- 퀵 액션 버튼 ---------- */
+.quick-actions{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.qa-btn{
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:6px; padding:16px 8px; border-radius:14px; border:none; cursor:pointer;
+  font-size:13px; font-weight:600; font-family:var(--font-body);
+}
+.qa-btn.maps{background:#E8F0EC; color:var(--ocean-deep);}
+.qa-btn.grab{background:#E8F0EC; color:var(--coral);}
+.qa-btn .ic{font-size:22px;}
+
+/* ---------- 숙소 카드(보딩패스) ---------- */
+.pass{
+  background:var(--card); border-radius:var(--radius); overflow:hidden;
+  box-shadow:var(--shadow); border:1px solid var(--line); margin-bottom:16px;
+  position:relative;
+}
+.pass-head{
+  background:var(--ocean-deep); color:var(--sand); padding:16px 18px;
+  display:flex; justify-content:space-between; align-items:flex-start;
+}
+.pass-head .stub{
+  font-family:var(--font-mono); font-size:11px; letter-spacing:0.1em; color:var(--mint);
+}
+.pass-head h1{font-family:var(--font-display); font-size:20px; margin:4px 0 0;}
+.pass-head .num{
+  font-family:var(--font-mono); font-size:22px; font-weight:700; opacity:0.85;
+}
+.pass-perf{
+  height:0; border-top:2px dashed var(--line); position:relative; margin:0 18px;
+}
+.pass-perf::before,.pass-perf::after{
+  content:""; position:absolute; top:-11px; width:22px; height:22px; border-radius:50%;
+  background:var(--sand);
+}
+.pass-perf::before{left:-33px;}
+.pass-perf::after{right:-33px;}
+.pass-body{padding:18px;}
+.pass-field{margin-bottom:14px;}
+.pass-field .lbl{
+  font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase;
+  color:var(--ocean-mid); margin-bottom:3px;
+}
+.pass-field .val{font-size:15px; font-weight:600; line-height:1.4;}
+.pass-actions{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:14px;}
+.pass-actions button, .pass-actions a{
+  border:none; border-radius:12px; padding:12px 4px; font-size:12px; font-weight:700;
+  cursor:pointer; text-align:center; display:flex; flex-direction:column; align-items:center; gap:4px;
+}
+.act-maps{background:var(--ocean-deep); color:var(--sand);}
+.act-grab{background:var(--coral); color:var(--sand);}
+.act-copy{background:var(--sand); color:var(--ink); border:1.5px solid var(--line) !important;}
+.toast{
+  position:fixed; bottom:96px; left:50%; transform:translateX(-50%) translateY(20px);
+  background:var(--ink); color:var(--sand); padding:10px 18px; border-radius:30px;
+  font-size:13px; opacity:0; pointer-events:none; transition:all .25s ease; z-index:50;
+}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+/* ---------- 숙소 순서 타임라인 ---------- */
+.stay-timeline{display:flex; flex-direction:column; align-items:stretch;}
+.stay-step{
+  display:flex; align-items:center; gap:12px; background:var(--sand);
+  border:1px solid var(--line); border-radius:14px; padding:12px 14px;
+}
+.step-num{
+  width:30px; height:30px; border-radius:50%; background:var(--ocean-deep); color:var(--sand);
+  font-family:var(--font-mono); font-weight:700; font-size:13px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.step-body .t{font-family:var(--font-display); font-size:15px; font-weight:700; color:var(--ink);}
+.step-body .a{font-size:11px; color:#8a9598; margin-top:2px;}
+.step-arrow{
+  text-align:center; color:var(--coral); font-size:16px; font-weight:700; padding:2px 0 2px 15px;
+}
+
+/* ---------- 숙소 그리드(대시보드 내) ---------- */
+.stay-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.stay-tile{
+  background:var(--card); border:1px solid var(--line); border-radius:14px;
+  padding:14px; position:relative; overflow:hidden;
+}
+.stay-tile .n{font-family:var(--font-mono); font-size:11px; color:var(--coral); font-weight:700;}
+.stay-tile .t{font-family:var(--font-display); font-size:15px; margin-top:4px; font-weight:700;}
+.stay-tile .a{font-size:11px; color:#8a9598; margin-top:4px; line-height:1.4;}
+
+/* ---------- 하단 탭 바 ---------- */
+.tabbar{
+  position:fixed; bottom:0; left:0; right:0; background:var(--card);
+  border-top:1px solid var(--line); display:flex; padding:8px 6px calc(8px + env(safe-area-inset-bottom));
+  box-shadow:0 -6px 20px -10px rgba(26,46,53,0.2); z-index:40;
+}
+.tab{
+  flex:1; text-align:center; padding:6px 2px; border-radius:12px; font-size:10px; font-weight:600;
+  color:#9aa8ab; display:flex; flex-direction:column; align-items:center; gap:3px;
+}
+.tab .ic{font-size:19px;}
+.tab.active{color:var(--ocean-deep); background:var(--sand);}
+
+/* ---------- PWA 설치 배너 ---------- */
+#installBanner{
+  display:none; margin:0 16px 14px; background:var(--gold); color:var(--ink);
+  border-radius:14px; padding:12px 14px; align-items:center; justify-content:space-between; gap:10px;
+  font-size:13px; font-weight:600;
+}
+#installBanner button{
+  background:var(--ink); color:var(--sand); border:none; border-radius:10px; padding:8px 12px; font-size:12px; font-weight:700; cursor:pointer;
+}
+
+/* ---------- 주변 맛집 지도 ---------- */
+#stayMap{
+  width:100%; height:230px; border-radius:14px; overflow:hidden;
+  border:1px solid var(--line); margin-bottom:12px;
+}
+.leaflet-popup-content-wrapper{
+  border-radius:10px; font-family:var(--font-body);
+}
+.popup-title{font-weight:700; font-size:13px; color:var(--ocean-deep); margin-bottom:3px;}
+.popup-addr{font-size:11px; color:#667; margin-bottom:6px; line-height:1.4;}
+.popup-link{font-size:11px; font-weight:700; color:var(--coral);}
+.food-list{display:flex; flex-direction:column; gap:8px;}
+.food-item{
+  display:flex; align-items:center; gap:10px; padding:10px 12px;
+  background:var(--sand); border-radius:12px; cursor:pointer; border:1px solid transparent;
+  transition:border-color .15s ease;
+}
+.food-item:hover{border-color:var(--mint);}
+.food-item .badge{
+  width:26px; height:26px; border-radius:50%; background:var(--coral); color:#fff;
+  font-family:var(--font-mono); font-size:12px; font-weight:700;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.food-item .info{flex:1; min-width:0;}
+.food-item .name{font-size:13px; font-weight:700; color:var(--ink);}
+.food-item .addr{font-size:11px; color:#8a9598; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.food-item .rating{font-family:var(--font-mono); font-size:11px; color:var(--gold); font-weight:700; flex-shrink:0;}
+
+/* ---------- Bootstrap 버전 메인화면 ---------- */
+body{ background:var(--sand); }
+.container{ max-width:520px; }
+
+.hero{
+  background:var(--ocean-deep); color:var(--sand);
+  border-radius:22px; padding:24px 20px; box-shadow:var(--shadow);
+  position:relative; overflow:hidden;
+}
+.hero::after{
+  content:""; position:absolute; right:-30px; top:-40px;
+  width:140px; height:140px; border-radius:50%;
+  background:radial-gradient(circle, rgba(255,107,74,0.55), transparent 70%);
+}
+.hero h2{ font-family:var(--font-display); font-weight:700; margin:0 0 6px; position:relative; z-index:1; }
+.hero div{ font-size:13px; color:rgba(250,246,239,0.85); position:relative; z-index:1; }
+
+.hotel-card{
+  border:1px solid var(--line); border-radius:16px;
+  box-shadow:0 4px 18px -8px rgba(26,46,53,0.14);
+}
+.hotel-card .card-title{ font-family:var(--font-display); color:var(--ocean-deep); font-size:15px; }
+.hotel-card h4{ font-family:var(--font-display); font-size:16px; }
+
+.btn-round{ border-radius:30px; font-weight:600; }
+.btn-primary.btn-round{ background:var(--ocean-deep); border-color:var(--ocean-deep); }
+.btn-primary.btn-round:hover{ background:var(--ocean-mid); border-color:var(--ocean-mid); }
+.btn-outline-primary.btn-round{ color:var(--ocean-deep); border-color:var(--ocean-deep); }
+.btn-outline-primary.btn-round:hover{ background:var(--ocean-deep); border-color:var(--ocean-deep); }
+.btn-outline-danger.btn-round{ color:var(--coral); border-color:var(--coral); }
+.btn-outline-danger.btn-round:hover{ background:var(--coral); border-color:var(--coral); }
+
+.stay-badge{
+  width:32px; height:32px; border-radius:50%; background:var(--coral); color:#fff;
+  font-family:var(--font-mono); font-weight:700; font-size:14px;
+  display:flex; align-items:center; justify-content:center; margin-right:12px; flex-shrink:0;
+}
+.timeline-arrow{ text-align:center; color:var(--coral); font-size:16px; font-weight:700; margin:2px 0; }
+
+.install-alert{
+  background:var(--gold); color:var(--ink); border:none; border-radius:14px;
+  padding:12px 14px; font-size:13px; font-weight:600;
+}
+.install-alert.show{ display:flex !important; }
+
+/* ---------- back link ---------- */
+.back{display:inline-flex; align-items:center; gap:4px; font-size:13px; color:var(--sand); opacity:0.85; margin-bottom:8px;}
+
+@media (min-width:540px){
+  .wrap{max-width:520px;}
+}
