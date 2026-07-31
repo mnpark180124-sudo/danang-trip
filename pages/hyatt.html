@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hyatt Regency Danang · 다낭 여행</title>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#0B4F6C">
+<link rel="apple-touch-icon" href="../icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back" href="../index.html">← 대시보드로</a>
+  <p class="eyebrow">STAY 03 · NGŨ HÀNH SƠN</p>
+  <h1>Hyatt Regency Danang</h1>
+  <p class="sub">8월 27일 – 8월 29일 (2박)</p>
+</div>
+
+<div class="wrap">
+
+  <div class="pass">
+    <div class="pass-head">
+      <div>
+        <div class="stub">BOARDING · STAY</div>
+        <h1>Hyatt Regency Danang</h1>
+      </div>
+      <div class="num">03</div>
+    </div>
+    <div class="pass-perf"></div>
+    <div class="pass-body">
+      <div class="pass-field">
+        <div class="lbl">주소</div>
+        <div class="val" id="addr">5 Truong Sa Street, Ngu Hanh Son Ward, Đà Nẵng 550000</div>
+      </div>
+      <div class="pass-field">
+        <div class="lbl">숙박 기간</div>
+        <div class="val">8월 27일 – 8월 29일 (2박)</div>
+      </div>
+      <div class="pass-actions">
+        <button class="act-maps" onclick="openMaps(document.getElementById('addr').textContent, 16.0130143, 108.26419790000001)">
+          📍<span>지도</span>
+        </button>
+        <button class="act-grab" onclick="openGrab()">
+          🚗<span>Grab</span>
+        </button>
+        <button class="act-copy" onclick="copyAddress(document.getElementById('addr').textContent, this)">
+          📋<span>주소복사</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="dot"></span>숙소 근처 맛집</h2>
+    <div id="stayMap"></div>
+    <div class="food-list" id="foodList"></div>
+  </div>
+
+</div>
+
+<div class="tabbar">
+  <a class="tab" href="../index.html"><span class="ic">🏠</span>홈</a>
+  <a class="tab" href="florence.html"><span class="ic">🛏️</span>숙소1</a>
+  <a class="tab" href="belmarina.html"><span class="ic">🛏️</span>숙소2</a>
+  <a class="tab active" href="hyatt.html"><span class="ic">🛏️</span>숙소3</a>
+  <a class="tab" href="altara.html"><span class="ic">🛏️</span>숙소4</a>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../app.js"></script>
+<script>
+  initStayMap(
+    { name: "Hyatt Regency Danang", address: "5 Truong Sa Street, Ngu Hanh Son Ward, Đà Nẵng 550000", lat: 16.0130143, lng: 108.26419790000001 },
+    [{"name": "Xanh House (베트남 요리)", "address": "5 Truong Sa Street, Ngũ Hành Sơn (호텔 내)", "lat": 16.0137644, "lng": 108.26431869999999, "rating": 4.4}, {"name": "Osteria Al Mare (이탈리안)", "address": "5 Trường Sa, Ngũ Hành Sơn (호텔 내)", "lat": 16.013283599999998, "lng": 108.26396349999999, "rating": 4.2}, {"name": "Vive Océane Beach Club", "address": "5 Trường Sa, Ngũ Hành Sơn (호텔 내)", "lat": 16.014091699999998, "lng": 108.26391319999999, "rating": 4.6}]
+  );
+</script>
+</body>
+</html>
