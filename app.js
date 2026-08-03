@@ -231,8 +231,8 @@ function initStayMap(hotel, restaurants) {
       .addTo(map)
       .bindPopup(`<div class="popup-title">${i + 1}. ${r.name}</div><div class="popup-addr">${r.address}</div><a class="popup-link" href="${mLink}" target="_blank">구글 지도에서 열기 →</a>`);
     return `<div class="food-item" onclick="window.open('${mLink}','_blank')">
-      <div class="badge">${i + 1}</div>
-      <div class="info"><div class="name">${r.name}</div><div class="addr">${r.address}</div></div>
+      <div class="badge">${r.icon || '🍽️'}</div>
+      <div class="info"><div class="name">${r.name}</div><div class="addr">${r.desc || r.address}</div></div>
       <div class="rating">★ ${r.rating}</div>
     </div>`;
   }).join('');

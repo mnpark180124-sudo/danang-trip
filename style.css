@@ -184,6 +184,20 @@ button{font-family:inherit;}
 }
 .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
+/* ---------- 항공권 카드 ---------- */
+.flight-row{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; }
+.flight-route{ display:flex; align-items:center; gap:10px; }
+.fp{ text-align:center; }
+.fp .code{ font-family:var(--font-mono); font-weight:700; font-size:16px; color:var(--ocean-deep); }
+.fp .city{ font-size:11px; color:#8a9598; }
+.fp-mid{ display:flex; flex-direction:column; align-items:center; color:var(--coral); font-size:11px; gap:2px; }
+.fp-mid i{ font-size:14px; }
+.flight-time{ font-family:var(--font-mono); font-size:12px; color:var(--ink); opacity:0.8; }
+.flight-meta{ font-size:12px; color:#8a9598; margin-top:8px; }
+
+/* ---------- 랜드마크 거리 ---------- */
+.landmark-line{ font-size:11px; color:var(--ocean-mid); margin-top:3px; }
+
 /* ---------- 숙소 순서 타임라인 ---------- */
 .stay-timeline{display:flex; flex-direction:column; align-items:stretch;}
 .stay-step{
@@ -253,8 +267,8 @@ button{font-family:inherit;}
 }
 .food-item:hover{border-color:var(--mint);}
 .food-item .badge{
-  width:26px; height:26px; border-radius:50%; background:var(--coral); color:#fff;
-  font-family:var(--font-mono); font-size:12px; font-weight:700;
+  width:32px; height:32px; border-radius:10px; background:var(--sand); border:1px solid var(--line);
+  font-size:16px;
   display:flex; align-items:center; justify-content:center; flex-shrink:0;
 }
 .food-item .info{flex:1; min-width:0;}
