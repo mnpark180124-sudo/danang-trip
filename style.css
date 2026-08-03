@@ -294,6 +294,7 @@ body{ background:var(--sand); }
 .btn-outline-danger.btn-round{ color:var(--coral); border-color:var(--coral); }
 .btn-outline-danger.btn-round:hover{ background:var(--coral); border-color:var(--coral); }
 
+.hotel-card .btn-round{ flex-shrink:0; white-space:nowrap; }
 .stay-badge{
   width:32px; height:32px; border-radius:50%; background:var(--coral); color:#fff;
   font-family:var(--font-mono); font-weight:700; font-size:14px;
