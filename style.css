@@ -273,8 +273,10 @@ button{font-family:inherit;}
 }
 .food-item .info{flex:1; min-width:0;}
 .food-item .name{font-size:13px; font-weight:700; color:var(--ink);}
+.food-item .name-ko{font-weight:500; color:var(--ocean-mid); font-size:12px;}
 .food-item .desc{font-size:11px; color:var(--ocean-mid); margin-top:1px;}
 .food-item .addr{font-size:11px; color:#8a9598; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.food-item .dist{color:var(--coral); font-weight:700;}
 .food-item .rating{font-family:var(--font-mono); font-size:11px; color:var(--gold); font-weight:700; flex-shrink:0;}
 
 /* ---------- 항공권 카드 ---------- */

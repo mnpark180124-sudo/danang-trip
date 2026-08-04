@@ -224,17 +224,29 @@ function initStayMap(hotel, restaurants) {
     iconAnchor: [13, 26],
   });
 
+  // 두 좌표 사이 거리(km) 계산 - Haversine 공식
+  const distKm = (lat1, lng1, lat2, lng2) => {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  };
+  const distLabel = (km) => km < 1 ? `${Math.round(km * 1000)}m` : `${km.toFixed(1)}km`;
+
   const listHtml = restaurants.map((r, i) => {
     markers.push([r.lat, r.lng]);
     const mLink = `https://www.google.com/maps/search/?api=1&query=${r.lat},${r.lng}`;
     const dishIcon = r.icon || '🍽️';
-    const descLine = r.desc ? `<div class="desc">${r.desc}</div>` : '';
+    const descLine = r.desc ? `<div class="desc">${dishIcon} ${r.desc}</div>` : '';
+    const nameLine = r.nameKo ? `${r.name} <span class="name-ko">· ${r.nameKo}</span>` : r.name;
+    const dist = distLabel(distKm(hotel.lat, hotel.lng, r.lat, r.lng));
     L.marker([r.lat, r.lng], { icon: foodIcon(i + 1) })
       .addTo(map)
-      .bindPopup(`<div class="popup-title">${dishIcon} ${i + 1}. ${r.name}</div><div class="popup-addr">${r.address}</div><a class="popup-link" href="${mLink}" target="_blank">구글 지도에서 열기 →</a>`);
+      .bindPopup(`<div class="popup-title">${dishIcon} ${i + 1}. ${r.name}</div><div class="popup-addr">${r.address} · 숙소에서 ${dist}</div><a class="popup-link" href="${mLink}" target="_blank">구글 지도에서 열기 →</a>`);
     return `<div class="food-item" onclick="window.open('${mLink}','_blank')">
       <div class="badge">${dishIcon}</div>
-      <div class="info"><div class="name">${r.name}</div>${descLine}<div class="addr">${r.address}</div></div>
+      <div class="info"><div class="name">${nameLine}</div>${descLine}<div class="addr">${r.address} · <span class="dist">숙소에서 ${dist}</span></div></div>
       <div class="rating">★ ${r.rating}</div>
     </div>`;
   }).join('');
