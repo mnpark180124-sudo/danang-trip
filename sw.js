@@ -1,11 +1,9 @@
-const CACHE_NAME = 'danang-trip-v3';
+// ===== Danang Trip Service Worker =====
 
-const ASSETS = [
+const CACHE_NAME = 'danang-trip';
+const OFFLINE_FILES = [
+  './',
   './index.html',
-  './pages/florence.html',
-  './pages/belmarina.html',
-  './pages/hyatt.html',
-  './pages/altara.html',
   './style.css',
   './app.js',
   './manifest.json',
@@ -13,58 +11,104 @@ const ASSETS = [
   './icons/icon-512.png',
 ];
 
+// 설치
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
-  );
   self.skipWaiting();
-});
 
-self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
-      )
-    )
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(OFFLINE_FILES))
   );
-  self.clients.claim();
 });
 
-self.addEventListener('fetch', (event) => {
-  const url = event.request.url;
+// 활성화
+self.addEventListener('activate', (event) => {
+  event.waitUntil((async () => {
 
-  // API는 항상 네트워크 우선
+    // 기존 캐시 삭제
+    const keys = await caches.keys();
+
+    await Promise.all(
+      keys
+        .filter(key => key !== CACHE_NAME)
+        .map(key => caches.delete(key))
+    );
+
+    await self.clients.claim();
+
+  })());
+});
+
+// 즉시 활성화
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// Fetch
+self.addEventListener('fetch', (event) => {
+
+  if (event.request.method !== 'GET') return;
+
+  const url = new URL(event.request.url);
+
+  // API는 항상 최신
   if (
-    url.includes('open.er-api.com') ||
-    url.includes('open-meteo.com')
+    url.hostname.includes('open.er-api.com') ||
+    url.hostname.includes('open-meteo.com')
   ) {
+
     event.respondWith(
       fetch(event.request).catch(() =>
-        new Response('{}', {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
+        caches.match(event.request)
       )
     );
+
     return;
   }
 
-  // 페이지 및 리소스는 Network First
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        const responseClone = response.clone();
+  // HTML은 항상 최신
+  if (event.request.mode === 'navigate') {
 
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseClone);
-        });
+    event.respondWith(
+
+      fetch(event.request)
+        .then(response => {
+
+          const copy = response.clone();
+
+          caches.open(CACHE_NAME)
+            .then(cache => cache.put(event.request, copy));
+
+          return response;
+
+        })
+        .catch(() => caches.match('./index.html'))
+
+    );
+
+    return;
+  }
+
+  // CSS / JS / 이미지
+  event.respondWith(
+
+    fetch(event.request)
+
+      .then(response => {
+
+        const copy = response.clone();
+
+        caches.open(CACHE_NAME)
+          .then(cache => cache.put(event.request, copy));
 
         return response;
+
       })
+
       .catch(() => caches.match(event.request))
+
   );
+
 });
