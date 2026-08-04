@@ -292,7 +292,7 @@ button{font-family:inherit;}
 .flight-time{ font-family:var(--font-mono); font-size:12px; color:var(--ink); text-align:center; }
 
 /* ---------- 숙소 카드: 열기 버튼을 이름 위로 ---------- */
-.stay-open-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.stay-open-row{ display:flex; align-items:center; justify-content:flex-end; margin-bottom:8px; }
 .landmark-line{ font-size:11px; color:#8a9598; margin-top:4px; }
 
 /* ---------- Bootstrap 버전 메인화면 ---------- */
