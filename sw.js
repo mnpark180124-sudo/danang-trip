@@ -1,4 +1,5 @@
-const CACHE_NAME = 'danang-trip-v2';
+const CACHE_NAME = 'danang-trip-v3';
+
 const ASSETS = [
   './index.html',
   './pages/florence.html',
@@ -14,7 +15,7 @@ const ASSETS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)).catch(() => {})
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
   );
   self.skipWaiting();
 });
@@ -22,20 +23,48 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+      Promise.all(
+        keys
+          .filter((key) => key !== CACHE_NAME)
+          .map((key) => caches.delete(key))
+      )
     )
   );
   self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  // API 요청(환율/날씨)은 항상 네트워크 우선, 그 외는 캐시 우선
   const url = event.request.url;
-  if (url.includes('open.er-api.com') || url.includes('open-meteo.com')) {
-    event.respondWith(fetch(event.request).catch(() => new Response('{}', { headers: { 'Content-Type': 'application/json' } })));
+
+  // API는 항상 네트워크 우선
+  if (
+    url.includes('open.er-api.com') ||
+    url.includes('open-meteo.com')
+  ) {
+    event.respondWith(
+      fetch(event.request).catch(() =>
+        new Response('{}', {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+      )
+    );
     return;
   }
+
+  // 페이지 및 리소스는 Network First
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    fetch(event.request)
+      .then((response) => {
+        const responseClone = response.clone();
+
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseClone);
+        });
+
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
