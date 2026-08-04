@@ -227,12 +227,14 @@ function initStayMap(hotel, restaurants) {
   const listHtml = restaurants.map((r, i) => {
     markers.push([r.lat, r.lng]);
     const mLink = `https://www.google.com/maps/search/?api=1&query=${r.lat},${r.lng}`;
+    const dishIcon = r.icon || '🍽️';
+    const descLine = r.desc ? `<div class="desc">${r.desc}</div>` : '';
     L.marker([r.lat, r.lng], { icon: foodIcon(i + 1) })
       .addTo(map)
-      .bindPopup(`<div class="popup-title">${i + 1}. ${r.name}</div><div class="popup-addr">${r.address}</div><a class="popup-link" href="${mLink}" target="_blank">구글 지도에서 열기 →</a>`);
+      .bindPopup(`<div class="popup-title">${dishIcon} ${i + 1}. ${r.name}</div><div class="popup-addr">${r.address}</div><a class="popup-link" href="${mLink}" target="_blank">구글 지도에서 열기 →</a>`);
     return `<div class="food-item" onclick="window.open('${mLink}','_blank')">
-      <div class="badge">${r.icon || '🍽️'}</div>
-      <div class="info"><div class="name">${r.name}</div><div class="addr">${r.desc || r.address}</div></div>
+      <div class="badge">${dishIcon}</div>
+      <div class="info"><div class="name">${r.name}</div>${descLine}<div class="addr">${r.address}</div></div>
       <div class="rating">★ ${r.rating}</div>
     </div>`;
   }).join('');
