@@ -349,3 +349,154 @@ body{ background:var(--sand); }
 @media (min-width:540px){
   .wrap{max-width:520px;}
 }
+
+
+/* ============================================================
+   V3-2 공동 여행경비
+   ============================================================ */
+
+.expense-summary {
+  padding: 16px;
+  border-radius: 14px;
+  background: #f5f7f9;
+  text-align: center;
+}
+
+.expense-total-label {
+  font-size: .82rem;
+  color: #6b7280;
+}
+
+.expense-total-value {
+  font-size: 1.55rem;
+  font-weight: 800;
+  margin-top: 4px;
+}
+
+.expense-per-person {
+  font-size: .82rem;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.expense-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.expense-member-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  background: #f3f4f6;
+  border-radius: 999px;
+  font-size: .85rem;
+  cursor: pointer;
+}
+
+.expense-member-check input {
+  margin: 0;
+}
+
+.expense-message {
+  min-height: 22px;
+  margin-top: 9px;
+  font-size: .85rem;
+}
+
+.expense-message.success {
+  color: #147a4b;
+}
+
+.expense-message.error {
+  color: #b42318;
+}
+
+.expense-message.info {
+  color: #0B4F6C;
+}
+
+.expense-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.expense-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.expense-title {
+  font-weight: 700;
+  font-size: .94rem;
+}
+
+.expense-meta {
+  margin-top: 4px;
+  font-size: .76rem;
+  color: #6b7280;
+}
+
+.expense-note {
+  margin-top: 3px;
+  font-size: .76rem;
+  color: #6b7280;
+}
+
+.expense-amount {
+  text-align: right;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.expense-amount small {
+  display: block;
+  font-size: .68rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.expense-delete {
+  font-size: .7rem;
+}
+
+.settlement-item {
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  background: #f7f7f8;
+}
+
+.settlement-name {
+  font-weight: 700;
+}
+
+.settlement-detail {
+  margin-top: 3px;
+  font-size: .76rem;
+  color: #6b7280;
+}
+
+.settlement-balance {
+  margin-top: 6px;
+  font-size: .82rem;
+  font-weight: 700;
+}
+
+.settlement-balance.receive {
+  color: #147a4b;
+}
+
+.settlement-balance.pay {
+  color: #b42318;
+}
+
+.settlement-balance.settled {
+  color: #6b7280;
+}
