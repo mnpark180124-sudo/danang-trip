@@ -966,3 +966,9 @@ document.addEventListener('DOMContentLoaded', () => {
     restoreTripSession();
   }
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (document.getElementById('tripRoom')) {
+    restoreTripSession();
+  }
+});
