@@ -73,6 +73,216 @@
   </div>
 </div>
 
+  <!-- ============================================================
+     V3-2 공동 여행경비
+     ============================================================ -->
+
+<div id="expenseRoom" class="card hotel-card mb-4">
+
+  <div class="card-body">
+
+    <h5 class="card-title mb-3">
+      <i class="bi bi-wallet2"></i>
+      공동 여행경비
+    </h5>
+
+    <!-- 총액 -->
+    <div id="expenseSummary" class="expense-summary mb-3">
+      <div class="text-muted">
+        경비를 불러오는 중...
+      </div>
+    </div>
+
+    <!-- 경비 입력 -->
+
+    <div class="expense-form">
+
+      <div class="mb-2">
+        <label class="form-label small text-muted">
+          사용처
+        </label>
+
+        <input
+          id="expenseDescription"
+          class="form-control"
+          type="text"
+          maxlength="80"
+          placeholder="예: 저녁 식사"
+        >
+      </div>
+
+      <div class="row g-2 mb-2">
+
+        <div class="col-7">
+
+          <label class="form-label small text-muted">
+            금액
+          </label>
+
+          <input
+            id="expenseAmount"
+            class="form-control"
+            type="number"
+            inputmode="decimal"
+            placeholder="500000"
+          >
+
+        </div>
+
+        <div class="col-5">
+
+          <label class="form-label small text-muted">
+            통화
+          </label>
+
+          <select
+            id="expenseCurrency"
+            class="form-select"
+          >
+            <option value="VND">VND</option>
+            <option value="KRW">KRW</option>
+          </select>
+
+        </div>
+
+      </div>
+
+      <div class="row g-2 mb-2">
+
+        <div class="col-6">
+
+          <label class="form-label small text-muted">
+            날짜
+          </label>
+
+          <input
+            id="expenseDate"
+            class="form-control"
+            type="date"
+          >
+
+        </div>
+
+        <div class="col-6">
+
+          <label class="form-label small text-muted">
+            카테고리
+          </label>
+
+          <select
+            id="expenseCategory"
+            class="form-select"
+          >
+            <option value="식비">🍜 식비</option>
+            <option value="교통">🚕 교통</option>
+            <option value="숙박">🏨 숙박</option>
+            <option value="관광">🎡 관광</option>
+            <option value="쇼핑">🛍️ 쇼핑</option>
+            <option value="마사지">💆 마사지</option>
+            <option value="기타">📌 기타</option>
+          </select>
+
+        </div>
+
+      </div>
+
+      <!-- 결제자 -->
+
+      <div class="mb-2">
+
+        <label class="form-label small text-muted">
+          결제자
+        </label>
+
+        <select
+          id="expensePayer"
+          class="form-select"
+        >
+          <option value="">
+            참여자를 불러오는 중...
+          </option>
+        </select>
+
+      </div>
+
+      <!-- 부담자 -->
+
+      <div class="mb-2">
+
+        <label class="form-label small text-muted">
+          함께 부담할 사람
+        </label>
+
+        <div
+          id="expenseSplitMembers"
+          class="expense-members"
+        ></div>
+
+      </div>
+
+      <!-- 메모 -->
+
+      <div class="mb-3">
+
+        <label class="form-label small text-muted">
+          메모
+        </label>
+
+        <input
+          id="expenseNote"
+          class="form-control"
+          type="text"
+          maxlength="120"
+          placeholder="선택사항"
+        >
+
+      </div>
+
+      <button
+        class="btn btn-primary btn-round w-100"
+        onclick="addExpense()"
+      >
+        💰 경비 추가
+      </button>
+
+      <div
+        id="expenseMessage"
+        class="expense-message"
+      ></div>
+
+    </div>
+
+    <hr class="my-4">
+
+    <!-- 경비 목록 -->
+
+    <h6 class="mb-3">
+      📋 경비 내역
+    </h6>
+
+    <div id="expenseList">
+      <div class="text-muted p-3 text-center">
+        경비를 불러오는 중...
+      </div>
+    </div>
+
+    <hr class="my-4">
+
+    <!-- 정산 -->
+
+    <h6 class="mb-3">
+      💸 현재 정산
+    </h6>
+
+    <div id="settlementList">
+      <div class="text-muted">
+        정산 정보를 계산하는 중...
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <div class='hero mb-4'><h2>🏝 Da Nang Travel</h2><div>🌤 Weather | 💱 Exchange | 🚖 Grab</div></div>
 
 <!-- 항공권 -->
