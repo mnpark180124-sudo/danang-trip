@@ -972,3 +972,548 @@ document.addEventListener('DOMContentLoaded', () => {
     restoreTripSession();
   }
 });
+
+// ============================================================
+// V3-2 · 공동 여행경비
+// ============================================================
+
+const EXPENSE_TRIP_STORAGE_KEY = 'danang_trip_v3_trip_id';
+
+let __expenseMembers = [];
+let __expenseItems = [];
+
+function getCurrentTripId() {
+  return localStorage.getItem(EXPENSE_TRIP_STORAGE_KEY);
+}
+
+function expenseMessage(message, type = 'info') {
+  const el = document.getElementById('expenseMessage');
+  if (!el) return;
+
+  el.textContent = message;
+  el.className = `expense-message ${type}`;
+}
+
+function formatMoney(value) {
+  return Number(value || 0).toLocaleString('ko-KR');
+}
+
+function getCurrencyLabel(currency) {
+  return currency === 'KRW' ? '원' : 'VND';
+}
+
+// ------------------------------------------------------------
+// 여행방 참여자 가져오기
+// ------------------------------------------------------------
+async function loadExpenseMembers() {
+  const client = getSupabaseClient();
+  const tripId = getCurrentTripId();
+
+  if (!client || !tripId) return [];
+
+  try {
+    await ensureAnonymousSession();
+
+    const { data, error } = await client.rpc('get_trip_members', {
+      p_trip_id: tripId
+    });
+
+    if (error) throw error;
+
+    __expenseMembers = data || [];
+
+    renderExpenseMemberOptions();
+
+    return __expenseMembers;
+  } catch (error) {
+    console.error('경비 참여자 조회 실패:', error);
+    return [];
+  }
+}
+
+// ------------------------------------------------------------
+// 결제자 / 부담자 선택 UI
+// ------------------------------------------------------------
+function renderExpenseMemberOptions() {
+  const payer = document.getElementById('expensePayer');
+  const splitList = document.getElementById('expenseSplitMembers');
+
+  if (!payer || !splitList) return;
+
+  payer.innerHTML = __expenseMembers.map(member => `
+    <option value="${escapeHtml(member.user_id)}">
+      ${escapeHtml(member.nickname)}
+    </option>
+  `).join('');
+
+  splitList.innerHTML = __expenseMembers.map(member => `
+    <label class="expense-member-check">
+      <input
+        type="checkbox"
+        value="${escapeHtml(member.user_id)}"
+        data-nickname="${escapeHtml(member.nickname)}"
+        checked
+      >
+      <span>${escapeHtml(member.nickname)}</span>
+    </label>
+  `).join('');
+}
+
+// ------------------------------------------------------------
+// 여행경비 등록
+// ------------------------------------------------------------
+async function addExpense() {
+  const client = getSupabaseClient();
+  const tripId = getCurrentTripId();
+
+  if (!client) {
+    expenseMessage('Supabase 연결을 확인해주세요.', 'error');
+    return;
+  }
+
+  if (!tripId) {
+    expenseMessage('먼저 여행방을 만들거나 참여해주세요.', 'error');
+    return;
+  }
+
+  const description =
+    document.getElementById('expenseDescription')?.value.trim();
+
+  const amount =
+    Number(
+      document
+        .getElementById('expenseAmount')
+        ?.value
+        .replace(/[^\d.]/g, '')
+    );
+
+  const currency =
+    document.getElementById('expenseCurrency')?.value || 'VND';
+
+  const expenseDate =
+    document.getElementById('expenseDate')?.value ||
+    new Date().toISOString().slice(0, 10);
+
+  const payerId =
+    document.getElementById('expensePayer')?.value;
+
+  const category =
+    document.getElementById('expenseCategory')?.value || '기타';
+
+  const note =
+    document.getElementById('expenseNote')?.value.trim() || null;
+
+  if (!description) {
+    expenseMessage('사용처를 입력해주세요.', 'error');
+    return;
+  }
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    expenseMessage('금액을 올바르게 입력해주세요.', 'error');
+    return;
+  }
+
+  if (!payerId) {
+    expenseMessage('결제자를 선택해주세요.', 'error');
+    return;
+  }
+
+  const checkedMembers = [
+    ...document.querySelectorAll(
+      '#expenseSplitMembers input[type="checkbox"]:checked'
+    )
+  ];
+
+  if (!checkedMembers.length) {
+    expenseMessage('부담할 사람을 한 명 이상 선택해주세요.', 'error');
+    return;
+  }
+
+  const payer = __expenseMembers.find(
+    member => member.user_id === payerId
+  );
+
+  if (!payer) {
+    expenseMessage('결제자를 찾을 수 없습니다.', 'error');
+    return;
+  }
+
+  try {
+    await ensureAnonymousSession();
+
+    const { data: expense, error } = await client
+      .from('expenses')
+      .insert({
+        trip_id: tripId,
+        description,
+        amount,
+        currency,
+        expense_date: expenseDate,
+        paid_by: payerId,
+        paid_by_nickname: payer.nickname,
+        category,
+        note,
+        created_by: (await client.auth.getUser()).data.user.id
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    const splitAmount = amount / checkedMembers.length;
+
+    const splits = checkedMembers.map(input => ({
+      expense_id: expense.id,
+      user_id: input.value,
+      nickname: input.dataset.nickname,
+      share_amount: Math.round(splitAmount * 100) / 100
+    }));
+
+    const { error: splitError } =
+      await client
+        .from('expense_splits')
+        .insert(splits);
+
+    if (splitError) throw splitError;
+
+    expenseMessage('경비가 저장되었습니다. 💰', 'success');
+
+    clearExpenseForm();
+
+    await loadExpenses();
+
+  } catch (error) {
+    console.error('경비 저장 실패:', error);
+    expenseMessage(
+      `경비 저장 실패: ${error.message || error}`,
+      'error'
+    );
+  }
+}
+
+// ------------------------------------------------------------
+// 경비 목록
+// ------------------------------------------------------------
+async function loadExpenses() {
+  const client = getSupabaseClient();
+  const tripId = getCurrentTripId();
+
+  const list = document.getElementById('expenseList');
+
+  if (!client || !tripId || !list) return;
+
+  try {
+    await ensureAnonymousSession();
+
+    const { data, error } = await client
+      .from('expenses')
+      .select('*')
+      .eq('trip_id', tripId)
+      .order('expense_date', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    __expenseItems = data || [];
+
+    renderExpenses();
+
+    await calculateSettlement();
+
+  } catch (error) {
+    console.error('경비 조회 실패:', error);
+
+    list.innerHTML =
+      '<div class="text-muted p-3">경비 정보를 불러오지 못했습니다.</div>';
+  }
+}
+
+// ------------------------------------------------------------
+// 경비 화면 표시
+// ------------------------------------------------------------
+function renderExpenses() {
+  const list = document.getElementById('expenseList');
+
+  if (!list) return;
+
+  if (!__expenseItems.length) {
+    list.innerHTML = `
+      <div class="text-muted p-3 text-center">
+        아직 등록된 여행경비가 없습니다.
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = __expenseItems.map(expense => `
+    <div class="expense-item">
+
+      <div class="expense-main">
+
+        <div class="expense-title">
+          ${escapeHtml(expense.description)}
+        </div>
+
+        <div class="expense-meta">
+          ${escapeHtml(expense.expense_date)}
+          · ${escapeHtml(expense.category || '기타')}
+          · 결제자 ${escapeHtml(expense.paid_by_nickname)}
+        </div>
+
+        ${
+          expense.note
+            ? `<div class="expense-note">${escapeHtml(expense.note)}</div>`
+            : ''
+        }
+
+      </div>
+
+      <div class="expense-amount">
+        ${formatMoney(expense.amount)}
+        <small>${getCurrencyLabel(expense.currency)}</small>
+      </div>
+
+      <button
+        class="btn btn-sm btn-outline-danger expense-delete"
+        onclick="deleteExpense('${expense.id}')"
+      >
+        삭제
+      </button>
+
+    </div>
+  `).join('');
+}
+
+// ------------------------------------------------------------
+// 경비 삭제
+// ------------------------------------------------------------
+async function deleteExpense(expenseId) {
+  if (!confirm('이 경비를 삭제할까요?')) return;
+
+  const client = getSupabaseClient();
+
+  if (!client) return;
+
+  try {
+    const { error } =
+      await client
+        .from('expenses')
+        .delete()
+        .eq('id', expenseId);
+
+    if (error) throw error;
+
+    expenseMessage('경비를 삭제했습니다.', 'success');
+
+    await loadExpenses();
+
+  } catch (error) {
+    console.error('경비 삭제 실패:', error);
+
+    expenseMessage(
+      `경비 삭제 실패: ${error.message || error}`,
+      'error'
+    );
+  }
+}
+
+// ------------------------------------------------------------
+// 정산 계산
+// ------------------------------------------------------------
+async function calculateSettlement() {
+  const client = getSupabaseClient();
+  const tripId = getCurrentTripId();
+
+  if (!client || !tripId) return;
+
+  const summary = document.getElementById('expenseSummary');
+  const settlement = document.getElementById('settlementList');
+
+  if (!summary || !settlement) return;
+
+  try {
+    const { data: expenses, error } =
+      await client
+        .from('expenses')
+        .select('*')
+        .eq('trip_id', tripId);
+
+    if (error) throw error;
+
+    const { data: splits, error: splitError } =
+      await client
+        .from('expense_splits')
+        .select('*')
+        .in(
+          'expense_id',
+          (expenses || []).map(e => e.id)
+        );
+
+    if (splitError) throw splitError;
+
+    const totals = {};
+
+    __expenseMembers.forEach(member => {
+      totals[member.user_id] = {
+        nickname: member.nickname,
+        paid: 0,
+        share: 0
+      };
+    });
+
+    let total = 0;
+
+    (expenses || []).forEach(expense => {
+      total += Number(expense.amount || 0);
+
+      if (!totals[expense.paid_by]) {
+        totals[expense.paid_by] = {
+          nickname: expense.paid_by_nickname,
+          paid: 0,
+          share: 0
+        };
+      }
+
+      totals[expense.paid_by].paid +=
+        Number(expense.amount || 0);
+    });
+
+    (splits || []).forEach(split => {
+
+      if (!totals[split.user_id]) {
+        totals[split.user_id] = {
+          nickname: split.nickname,
+          paid: 0,
+          share: 0
+        };
+      }
+
+      totals[split.user_id].share +=
+        Number(split.share_amount || 0);
+    });
+
+    const people = Object.values(totals);
+
+    const count = people.length || 1;
+
+    summary.innerHTML = `
+      <div class="expense-total-label">총 여행경비</div>
+      <div class="expense-total-value">
+        ${formatMoney(total)} VND
+      </div>
+      <div class="expense-per-person">
+        1인 평균 ${formatMoney(total / count)} VND
+      </div>
+    `;
+
+    settlement.innerHTML = people.map(person => {
+
+      const balance = person.paid - person.share;
+
+      let status = '정산 완료';
+      let cls = 'settled';
+
+      if (balance > 0.5) {
+        status = `받을 돈 ${formatMoney(balance)} VND`;
+        cls = 'receive';
+      }
+
+      if (balance < -0.5) {
+        status = `낼 돈 ${formatMoney(Math.abs(balance))} VND`;
+        cls = 'pay';
+      }
+
+      return `
+        <div class="settlement-item">
+
+          <div class="settlement-name">
+            ${escapeHtml(person.nickname)}
+          </div>
+
+          <div class="settlement-detail">
+            결제 ${formatMoney(person.paid)}
+            · 부담 ${formatMoney(person.share)}
+          </div>
+
+          <div class="settlement-balance ${cls}">
+            ${status}
+          </div>
+
+        </div>
+      `;
+
+    }).join('');
+
+  } catch (error) {
+    console.error('정산 계산 실패:', error);
+
+    settlement.innerHTML =
+      '<div class="text-muted">정산 정보를 계산하지 못했습니다.</div>';
+  }
+}
+
+// ------------------------------------------------------------
+// 입력폼 초기화
+// ------------------------------------------------------------
+function clearExpenseForm() {
+  const description =
+    document.getElementById('expenseDescription');
+
+  const amount =
+    document.getElementById('expenseAmount');
+
+  const note =
+    document.getElementById('expenseNote');
+
+  if (description) description.value = '';
+  if (amount) amount.value = '';
+  if (note) note.value = '';
+
+  document
+    .querySelectorAll(
+      '#expenseSplitMembers input[type="checkbox"]'
+    )
+    .forEach(input => {
+      input.checked = true;
+    });
+}
+
+// ------------------------------------------------------------
+// V3-2 초기화
+// ------------------------------------------------------------
+async function initExpenses() {
+
+  if (!document.getElementById('expenseRoom')) return;
+
+  const tripId = getCurrentTripId();
+
+  if (!tripId) {
+    expenseMessage(
+      '여행방을 먼저 만들거나 참여해주세요.',
+      'info'
+    );
+    return;
+  }
+
+  await ensureAnonymousSession();
+
+  await loadExpenseMembers();
+
+  await loadExpenses();
+
+  const dateInput =
+    document.getElementById('expenseDate');
+
+  if (dateInput && !dateInput.value) {
+    dateInput.value =
+      new Date().toISOString().slice(0, 10);
+  }
+}
+
+window.addExpense = addExpense;
+window.deleteExpense = deleteExpense;
+window.loadExpenses = loadExpenses;
+
+document.addEventListener('DOMContentLoaded', () => {
+  initExpenses();
+});
