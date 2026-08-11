@@ -1517,3 +1517,322 @@ window.loadExpenses = loadExpenses;
 document.addEventListener('DOMContentLoaded', () => {
   initExpenses();
 });
+
+// ============================================================
+// V3-3-1 · 날짜별 여행 플래너 / 공동 체크리스트
+// ============================================================
+
+const V33_SELECTED_DATE_PREFIX = 'danang_trip_v33_selected_date_';
+
+let __v33Trip = null;
+let __v33Dates = [];
+let __v33SelectedDate = null;
+let __v33Schedules = [];
+let __v33Checklist = [];
+
+function v33DateKey(date) {
+  if (!date) return '';
+  const d = new Date(`${date}T12:00:00`);
+  return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
+}
+
+function v33DateRange(startDate, endDate) {
+  const result = [];
+  const current = new Date(`${startDate}T12:00:00`);
+  const end = new Date(`${endDate}T12:00:00`);
+  if (Number.isNaN(current.getTime()) || Number.isNaN(end.getTime())) return result;
+
+  let guard = 0;
+  while (current <= end && guard < 100) {
+    result.push(current.toISOString().slice(0, 10));
+    current.setDate(current.getDate() + 1);
+    guard++;
+  }
+  return result;
+}
+
+function v33FormatDate(dateKey) {
+  return new Date(`${dateKey}T12:00:00`).toLocaleDateString('ko-KR', {
+    month: 'long', day: 'numeric', weekday: 'short'
+  });
+}
+
+function v33DayNumber(dateKey) {
+  const index = __v33Dates.indexOf(dateKey);
+  return index >= 0 ? index + 1 : 1;
+}
+
+function v33DefaultSchedules(trip) {
+  const dates = v33DateRange(trip.start_date, trip.end_date);
+  const defaults = [
+    ['✈️ 인천 → 다낭', '대한항공 KE459 · 18:20 → 21:05 · 다낭 도착 후 Florence 이동'],
+    ['🏨 Florence → Bel Marina', '호이안 이동 · Bel Marina 체크인'],
+    ['🏮 호이안 올드타운', '구시가지 · 카페 · 야시장 후보'],
+    ['🏮 호이안 DAY', '올드타운 자유 일정 · 마사지 · 카페'],
+    ['🏖️ 안방비치 / 호이안', '해변과 호이안 자유 일정'],
+    ['🏨 Bel Marina → Hyatt', '다낭 이동 · Hyatt 체크인'],
+    ['🏖️ Hyatt / 미케비치', '리조트 · 해변 중심 휴식'],
+    ['🏖️ 다낭 자유 일정', '미케비치 · 카페 · 마사지 후보'],
+    ['🏨 Hyatt → Altara', 'Altara 이동 · 체크인'],
+    ['🌴 다낭 자유 일정', '한시장 · 용다리 · 미케비치 후보'],
+    ['🍜 다낭 맛집 DAY', '먹고 싶은 메뉴와 식당 후보 결정'],
+    ['🌴 다낭 자유 일정', '쇼핑 · 마사지 · 카페 후보'],
+    ['✈️ 다낭 → 인천', 'Altara 출발 · 공항 이동 · KE460 22:55 출발']
+  ];
+
+  return dates.map((date, index) => ({
+    trip_id: trip.id,
+    schedule_date: date,
+    title: defaults[index]?.[0] || '🌴 다낭 자유 일정',
+    description: defaults[index]?.[1] || '가고 싶은 장소와 먹고 싶은 메뉴를 추가해보세요.',
+    sort_order: 10
+  }));
+}
+
+async function v33EnsureSchedules(trip) {
+  const client = getSupabaseClient();
+  if (!client || !trip?.id) return;
+
+  try {
+    const { data, error } = await client
+      .from('trip_schedules')
+      .select('id,trip_id,schedule_date,title,description,sort_order,created_by,created_at')
+      .eq('trip_id', trip.id)
+      .order('schedule_date', { ascending: true })
+      .order('sort_order', { ascending: true });
+
+    if (error) throw error;
+
+    if (data?.length) {
+      __v33Schedules = data;
+      return;
+    }
+
+    const user = (await client.auth.getUser())?.data?.user;
+    const rows = v33DefaultSchedules(trip).map(row => ({
+      ...row,
+      created_by: user?.id || null
+    }));
+
+    const { data: inserted, error: insertError } = await client
+      .from('trip_schedules')
+      .insert(rows)
+      .select();
+
+    if (insertError) throw insertError;
+    __v33Schedules = inserted || rows;
+  } catch (error) {
+    console.warn('V3-3 일정 초기화 실패:', error);
+    __v33Schedules = v33DefaultSchedules(trip).map((row, i) => ({
+      ...row, id: `local-${i}`
+    }));
+  }
+}
+
+async function v33LoadChecklist(tripId) {
+  const client = getSupabaseClient();
+  const list = document.getElementById('v33Checklist');
+  const status = document.getElementById('v33ChecklistStatus');
+  if (!client || !tripId || !list) return;
+
+  try {
+    const { error: rpcError } = await client.rpc('create_trip_checklist_v3', {
+      p_trip_id: tripId
+    });
+    if (rpcError) throw rpcError;
+
+    const { data, error } = await client
+      .from('trip_checklist')
+      .select('id,trip_id,item_key,item_name,checked,updated_by,updated_at')
+      .eq('trip_id', tripId)
+      .order('id', { ascending: true });
+
+    if (error) throw error;
+
+    __v33Checklist = data || [];
+    v33RenderChecklist();
+
+    if (status) {
+      status.textContent = `${__v33Checklist.filter(x => x.checked).length} / ${__v33Checklist.length} 완료`;
+    }
+  } catch (error) {
+    console.error('V3-3 체크리스트 조회 실패:', error);
+    list.innerHTML = '<div class="text-muted">체크리스트를 불러오지 못했습니다.</div>';
+  }
+}
+
+function v33RenderChecklist() {
+  const list = document.getElementById('v33Checklist');
+  const status = document.getElementById('v33ChecklistStatus');
+  if (!list) return;
+
+  list.innerHTML = __v33Checklist.map(item => `
+    <label class="v33-check-item ${item.checked ? 'checked' : ''}">
+      <input type="checkbox"
+        ${item.checked ? 'checked' : ''}
+        onchange="v33ToggleChecklist('${item.id}', this.checked)">
+      <span class="check-name">${escapeHtml(item.item_name)}</span>
+    </label>
+  `).join('');
+
+  if (status) {
+    status.textContent = `${__v33Checklist.filter(x => x.checked).length} / ${__v33Checklist.length} 완료`;
+  }
+}
+
+async function v33ToggleChecklist(id, checked) {
+  const client = getSupabaseClient();
+  if (!client) return;
+
+  const item = __v33Checklist.find(x => String(x.id) === String(id));
+  const previous = item?.checked;
+  if (item) item.checked = checked;
+  v33RenderChecklist();
+
+  try {
+    const user = (await client.auth.getUser())?.data?.user;
+    const { error } = await client
+      .from('trip_checklist')
+      .update({
+        checked,
+        updated_by: user?.id || null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('체크리스트 저장 실패:', error);
+    if (item) item.checked = previous;
+    v33RenderChecklist();
+    showToast('체크 상태 저장에 실패했어요.');
+  }
+}
+
+window.v33ToggleChecklist = v33ToggleChecklist;
+
+function v33RenderDateStrip() {
+  const strip = document.getElementById('v33DateStrip');
+  if (!strip) return;
+
+  strip.innerHTML = __v33Dates.map((dateKey, index) => {
+    const date = new Date(`${dateKey}T12:00:00`);
+    return `
+      <button type="button"
+        class="v33-date-chip ${dateKey === __v33SelectedDate ? 'active' : ''}"
+        onclick="v33SelectDate('${dateKey}')">
+        <div class="n">DAY ${index + 1}</div>
+        <div class="d">${date.getMonth() + 1}/${date.getDate()}</div>
+        <div class="n">${date.toLocaleDateString('ko-KR', {weekday:'short'})}</div>
+      </button>
+    `;
+  }).join('');
+
+  const active = strip.querySelector('.active');
+  if (active) active.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+}
+
+function v33RenderSelectedDay() {
+  const list = document.getElementById('v33ScheduleList');
+  const label = document.getElementById('v33DayLabel');
+  const date = document.getElementById('v33DayDate');
+  const sub = document.getElementById('v33DaySub');
+  const prev = document.getElementById('v33PrevDay');
+  const next = document.getElementById('v33NextDay');
+
+  if (!list || !__v33SelectedDate) return;
+
+  const dayNumber = v33DayNumber(__v33SelectedDate);
+  if (label) label.textContent = `DAY ${dayNumber}`;
+  if (date) date.textContent = v33FormatDate(__v33SelectedDate);
+
+  const stayMap = {
+    '2026-08-23': '다낭 도착 · Florence',
+    '2026-08-24': 'Florence → Bel Marina',
+    '2026-08-27': 'Bel Marina → Hyatt',
+    '2026-08-29': 'Hyatt → Altara',
+    '2026-09-04': '귀국일'
+  };
+  if (sub) sub.textContent = stayMap[__v33SelectedDate] || '다낭 여행';
+
+  const schedules = __v33Schedules
+    .filter(item => v33DateKey(item.schedule_date) === __v33SelectedDate)
+    .sort((a,b) => Number(a.sort_order||0) - Number(b.sort_order||0));
+
+  list.innerHTML = schedules.length
+    ? schedules.map(item => `
+        <div class="v33-schedule">
+          <div class="v33-time">DAY ${dayNumber}</div>
+          <div class="v33-title">${escapeHtml(item.title)}</div>
+          ${item.description ? `<div class="v33-desc">${escapeHtml(item.description)}</div>` : ''}
+        </div>
+      `).join('')
+    : `<div class="v33-empty">이 날짜에는 아직 일정이 없습니다.</div>`;
+
+  const index = __v33Dates.indexOf(__v33SelectedDate);
+  if (prev) prev.disabled = index <= 0;
+  if (next) next.disabled = index >= __v33Dates.length - 1;
+}
+
+function v33SelectDate(dateKey) {
+  if (!__v33Dates.includes(dateKey)) return;
+  __v33SelectedDate = dateKey;
+
+  if (__v33Trip?.id) {
+    localStorage.setItem(`${V33_SELECTED_DATE_PREFIX}${__v33Trip.id}`, dateKey);
+  }
+
+  v33RenderDateStrip();
+  v33RenderSelectedDay();
+}
+
+window.v33SelectDate = v33SelectDate;
+
+function v33MoveDay(delta) {
+  const index = __v33Dates.indexOf(__v33SelectedDate);
+  const nextIndex = index + delta;
+  if (index < 0 || nextIndex < 0 || nextIndex >= __v33Dates.length) return;
+  v33SelectDate(__v33Dates[nextIndex]);
+}
+
+function v33InitNavigation() {
+  const prev = document.getElementById('v33PrevDay');
+  const next = document.getElementById('v33NextDay');
+
+  if (prev && !prev.dataset.bound) {
+    prev.dataset.bound = '1';
+    prev.addEventListener('click', () => v33MoveDay(-1));
+  }
+  if (next && !next.dataset.bound) {
+    next.dataset.bound = '1';
+    next.addEventListener('click', () => v33MoveDay(1));
+  }
+}
+
+async function initV33Planner(trip) {
+  if (!document.getElementById('v33Planner') || !trip?.id) return;
+
+  __v33Trip = trip;
+  __v33Dates = v33DateRange(trip.start_date, trip.end_date);
+  if (!__v33Dates.length) return;
+
+  const saved = localStorage.getItem(`${V33_SELECTED_DATE_PREFIX}${trip.id}`);
+  __v33SelectedDate = saved && __v33Dates.includes(saved) ? saved : __v33Dates[0];
+
+  v33InitNavigation();
+  v33RenderDateStrip();
+  v33RenderSelectedDay();
+
+  await v33EnsureSchedules(trip);
+  await v33LoadChecklist(trip.id);
+
+  v33RenderDateStrip();
+  v33RenderSelectedDay();
+}
+
+// 기존 V3-1의 여행방 상태 표시 함수에 V3-3 초기화를 연결
+const __v33BaseSetTripStatus = setTripStatus;
+setTripStatus = function(trip, nickname) {
+  __v33BaseSetTripStatus(trip, nickname);
+  if (trip?.id) initV33Planner(trip);
+};
