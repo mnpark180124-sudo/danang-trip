@@ -840,6 +840,7 @@ async function createTrip() {
     setTripStatus(trip, nickname);
     tripUiMessage(`여행방이 만들어졌어요. 코드: ${trip.trip_code}`, 'success');
     await loadTripMembers(trip.id);
+    await initV33(trip);
   } catch (error) {
     console.error(error);
     tripUiMessage(
@@ -886,6 +887,7 @@ async function joinTrip() {
     setTripStatus(trip, nickname);
     tripUiMessage(`'${trip.name}' 여행방에 참여했어요.`, 'success');
     await loadTripMembers(trip.id);
+    await initV33(trip);
   } catch (error) {
     console.error(error);
     tripUiMessage(`여행방 참여 실패: ${error.message || error}`, 'error');
@@ -939,6 +941,7 @@ async function restoreTripSession() {
 
     setTripStatus(data, nickname);
     await loadTripMembers(data.id);
+    await initV33(data);
   } catch (error) {
     console.warn('여행방 복원 실패:', error);
   }
@@ -1518,321 +1521,496 @@ document.addEventListener('DOMContentLoaded', () => {
   initExpenses();
 });
 
-// ============================================================
-// V3-3-1 · 날짜별 여행 플래너 / 공동 체크리스트
-// ============================================================
 
-const V33_SELECTED_DATE_PREFIX = 'danang_trip_v33_selected_date_';
+// ============================================================
+// V3-3 · 날짜별 일정 / 공동 체크리스트 / 장소·메뉴 추천
+// ============================================================
 
 let __v33Trip = null;
 let __v33Dates = [];
-let __v33SelectedDate = null;
-let __v33Schedules = [];
-let __v33Checklist = [];
+let __v33DateIndex = 0;
+let __v33RefreshTimer = null;
 
-function v33DateKey(date) {
-  if (!date) return '';
-  const d = new Date(`${date}T12:00:00`);
-  return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
+function getV33TripId() {
+  return localStorage.getItem(TRIP_STORAGE_KEY) || localStorage.getItem(EXPENSE_TRIP_STORAGE_KEY);
 }
 
-function v33DateRange(startDate, endDate) {
-  const result = [];
-  const current = new Date(`${startDate}T12:00:00`);
-  const end = new Date(`${endDate}T12:00:00`);
-  if (Number.isNaN(current.getTime()) || Number.isNaN(end.getTime())) return result;
+function v33Message(message, type = 'info') {
+  const el = document.getElementById('v33Message');
+  if (!el) return;
+  el.textContent = message;
+  el.className = `v33-message ${type}`;
+}
 
-  let guard = 0;
-  while (current <= end && guard < 100) {
-    result.push(current.toISOString().slice(0, 10));
-    current.setDate(current.getDate() + 1);
-    guard++;
+function v33FormatDate(dateString) {
+  const date = new Date(`${dateString}T12:00:00`);
+  return {
+    monthDay: `${date.getMonth() + 1}월 ${date.getDate()}일`,
+    weekday: date.toLocaleDateString('ko-KR', { weekday: 'long' }),
+  };
+}
+
+function v33BuildDates(startDate, endDate) {
+  const result = [];
+  const start = new Date(`${startDate}T12:00:00`);
+  const end = new Date(`${endDate}T12:00:00`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) return result;
+
+  const cursor = new Date(start);
+  while (cursor <= end) {
+    result.push(cursor.toISOString().slice(0, 10));
+    cursor.setDate(cursor.getDate() + 1);
   }
   return result;
 }
 
-function v33FormatDate(dateKey) {
-  return new Date(`${dateKey}T12:00:00`).toLocaleDateString('ko-KR', {
-    month: 'long', day: 'numeric', weekday: 'short'
-  });
+async function v33GetCurrentUserId() {
+  const client = getSupabaseClient();
+  if (!client) return null;
+  await ensureAnonymousSession();
+  const { data } = await client.auth.getUser();
+  return data?.user?.id || null;
 }
 
-function v33DayNumber(dateKey) {
-  const index = __v33Dates.indexOf(dateKey);
-  return index >= 0 ? index + 1 : 1;
+async function v33EnsureChecklist(tripId) {
+  const client = getSupabaseClient();
+  if (!client || !tripId) return;
+  try {
+    await client.rpc('create_trip_checklist_v3', { p_trip_id: tripId });
+  } catch (error) {
+    console.warn('V3-3 체크리스트 기본값 생성 실패:', error);
+  }
 }
 
-function v33DefaultSchedules(trip) {
-  const dates = v33DateRange(trip.start_date, trip.end_date);
-  const defaults = [
-    ['✈️ 인천 → 다낭', '대한항공 KE459 · 18:20 → 21:05 · 다낭 도착 후 Florence 이동'],
-    ['🏨 Florence → Bel Marina', '호이안 이동 · Bel Marina 체크인'],
-    ['🏮 호이안 올드타운', '구시가지 · 카페 · 야시장 후보'],
-    ['🏮 호이안 DAY', '올드타운 자유 일정 · 마사지 · 카페'],
-    ['🏖️ 안방비치 / 호이안', '해변과 호이안 자유 일정'],
-    ['🏨 Bel Marina → Hyatt', '다낭 이동 · Hyatt 체크인'],
-    ['🏖️ Hyatt / 미케비치', '리조트 · 해변 중심 휴식'],
-    ['🏖️ 다낭 자유 일정', '미케비치 · 카페 · 마사지 후보'],
-    ['🏨 Hyatt → Altara', 'Altara 이동 · 체크인'],
-    ['🌴 다낭 자유 일정', '한시장 · 용다리 · 미케비치 후보'],
-    ['🍜 다낭 맛집 DAY', '먹고 싶은 메뉴와 식당 후보 결정'],
-    ['🌴 다낭 자유 일정', '쇼핑 · 마사지 · 카페 후보'],
-    ['✈️ 다낭 → 인천', 'Altara 출발 · 공항 이동 · KE460 22:55 출발']
-  ];
-
-  return dates.map((date, index) => ({
-    trip_id: trip.id,
-    schedule_date: date,
-    title: defaults[index]?.[0] || '🌴 다낭 자유 일정',
-    description: defaults[index]?.[1] || '가고 싶은 장소와 먹고 싶은 메뉴를 추가해보세요.',
-    sort_order: 10
-  }));
-}
-
-async function v33EnsureSchedules(trip) {
+async function v33EnsureDefaultSchedules(trip) {
   const client = getSupabaseClient();
   if (!client || !trip?.id) return;
 
   try {
     const { data, error } = await client
       .from('trip_schedules')
-      .select('id,trip_id,schedule_date,title,description,sort_order,created_by,created_at')
+      .select('id')
       .eq('trip_id', trip.id)
-      .order('schedule_date', { ascending: true })
-      .order('sort_order', { ascending: true });
+      .limit(1);
 
     if (error) throw error;
+    if (data?.length) return;
 
-    if (data?.length) {
-      __v33Schedules = data;
-      return;
+    const dates = v33BuildDates(trip.start_date, trip.end_date);
+    const templates = [
+      ['✈️ 인천 → 다낭', 'KE459 18:20 → 21:05 · Florence Hotel 체크인'],
+      ['🏮 호이안 이동 · Bel Marina', 'Florence → Bel Marina · 호이안 구시가지'],
+      ['🏮 호이안 여행', '구시가지 · 안방비치 · 코코넛배 등을 자유롭게 추가하세요'],
+      ['🏖️ Hyatt 이동', 'Bel Marina → Hyatt · 미케비치 / 오행산'],
+      ['🌴 다낭 자유 일정', '가고 싶은 장소와 먹고 싶은 메뉴를 추가해보세요'],
+      ['🏖️ 미케비치 / 다낭 시내', '해변 · 마사지 · 카페 · 쇼핑'],
+      ['🌊 다낭 자유 일정', '친구들과 투표한 장소를 우선 방문하세요'],
+      ['🍜 다낭 맛집 데이', '먹고 싶은 메뉴를 모아 맛집을 정해보세요'],
+      ['🛍️ 쇼핑 / 시장', '한시장 · 롯데마트 등'],
+      ['🌴 다낭 자유 일정', '여행방에서 함께 계획을 추가하세요'],
+      ['🌴 다낭 자유 일정', '여행방에서 함께 계획을 추가하세요'],
+      ['🌴 마지막 일정', '남은 장소와 메뉴를 확인하세요'],
+      ['✈️ 다낭 → 인천', 'KE460 22:55 → 09:05 · 귀국'],
+    ];
+
+    const rows = dates.map((date, index) => {
+      const template = templates[index] || ['📅 여행 일정', '이 날짜의 일정과 장소를 함께 정해보세요.'];
+      return {
+        trip_id: trip.id,
+        schedule_date: date,
+        title: template[0],
+        description: template[1],
+        sort_order: 0,
+        created_by: trip.created_by || null,
+      };
+    });
+
+    if (rows.length) {
+      const { error: insertError } = await client.from('trip_schedules').insert(rows);
+      if (insertError) console.warn('기본 일정 생성 실패:', insertError);
     }
-
-    const user = (await client.auth.getUser())?.data?.user;
-    const rows = v33DefaultSchedules(trip).map(row => ({
-      ...row,
-      created_by: user?.id || null
-    }));
-
-    const { data: inserted, error: insertError } = await client
-      .from('trip_schedules')
-      .insert(rows)
-      .select();
-
-    if (insertError) throw insertError;
-    __v33Schedules = inserted || rows;
   } catch (error) {
-    console.warn('V3-3 일정 초기화 실패:', error);
-    __v33Schedules = v33DefaultSchedules(trip).map((row, i) => ({
-      ...row, id: `local-${i}`
-    }));
+    console.warn('기본 일정 확인 실패:', error);
   }
 }
 
-async function v33LoadChecklist(tripId) {
+async function v33LoadSchedules() {
   const client = getSupabaseClient();
-  const list = document.getElementById('v33Checklist');
-  const status = document.getElementById('v33ChecklistStatus');
+  const tripId = getV33TripId();
+  const list = document.getElementById('v33ScheduleList');
   if (!client || !tripId || !list) return;
 
   try {
-    const { error: rpcError } = await client.rpc('create_trip_checklist_v3', {
-      p_trip_id: tripId
-    });
-    if (rpcError) throw rpcError;
-
     const { data, error } = await client
-      .from('trip_checklist')
-      .select('id,trip_id,item_key,item_name,checked,updated_by,updated_at')
+      .from('trip_schedules')
+      .select('*')
       .eq('trip_id', tripId)
-      .order('id', { ascending: true });
-
+      .eq('schedule_date', __v33Dates[__v33DateIndex])
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true });
     if (error) throw error;
 
-    __v33Checklist = data || [];
-    v33RenderChecklist();
-
-    if (status) {
-      status.textContent = `${__v33Checklist.filter(x => x.checked).length} / ${__v33Checklist.length} 완료`;
-    }
+    list.innerHTML = (data || []).map(item => `
+      <div class="v33-item">
+        <div class="v33-item-main">
+          <strong>${escapeHtml(item.title)}</strong>
+          ${item.description ? `<div>${escapeHtml(item.description)}</div>` : ''}
+        </div>
+        <button class="v33-delete" onclick="deleteV33Schedule('${item.id}')">삭제</button>
+      </div>
+    `).join('') || '<div class="v33-empty">아직 등록된 일정이 없습니다.</div>';
   } catch (error) {
-    console.error('V3-3 체크리스트 조회 실패:', error);
-    list.innerHTML = '<div class="text-muted">체크리스트를 불러오지 못했습니다.</div>';
+    console.error('일정 조회 실패:', error);
+    list.innerHTML = '<div class="v33-empty">일정을 불러오지 못했습니다.</div>';
   }
 }
 
-function v33RenderChecklist() {
-  const list = document.getElementById('v33Checklist');
-  const status = document.getElementById('v33ChecklistStatus');
-  if (!list) return;
-
-  list.innerHTML = __v33Checklist.map(item => `
-    <label class="v33-check-item ${item.checked ? 'checked' : ''}">
-      <input type="checkbox"
-        ${item.checked ? 'checked' : ''}
-        onchange="v33ToggleChecklist('${item.id}', this.checked)">
-      <span class="check-name">${escapeHtml(item.item_name)}</span>
-    </label>
-  `).join('');
-
-  if (status) {
-    status.textContent = `${__v33Checklist.filter(x => x.checked).length} / ${__v33Checklist.length} 완료`;
-  }
-}
-
-async function v33ToggleChecklist(id, checked) {
+async function v33LoadChecklist() {
   const client = getSupabaseClient();
-  if (!client) return;
-
-  const item = __v33Checklist.find(x => String(x.id) === String(id));
-  const previous = item?.checked;
-  if (item) item.checked = checked;
-  v33RenderChecklist();
+  const tripId = getV33TripId();
+  const list = document.getElementById('v33Checklist');
+  if (!client || !tripId || !list) return;
 
   try {
-    const user = (await client.auth.getUser())?.data?.user;
-    const { error } = await client
+    await v33EnsureChecklist(tripId);
+    const { data, error } = await client
       .from('trip_checklist')
-      .update({
-        checked,
-        updated_by: user?.id || null,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id);
-
+      .select('*')
+      .eq('trip_id', tripId)
+      .order('id', { ascending: true });
     if (error) throw error;
+
+    list.innerHTML = (data || []).map(item => `
+      <label class="v33-check ${item.checked ? 'is-checked' : ''}">
+        <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleV33Checklist('${item.id}', this.checked)">
+        <span class="v33-check-icon">${item.checked ? '✓' : ''}</span>
+        <span>${escapeHtml(item.item_name)}</span>
+      </label>
+    `).join('');
   } catch (error) {
-    console.error('체크리스트 저장 실패:', error);
-    if (item) item.checked = previous;
-    v33RenderChecklist();
-    showToast('체크 상태 저장에 실패했어요.');
+    console.error('체크리스트 조회 실패:', error);
+    list.innerHTML = '<div class="v33-empty">체크리스트를 불러오지 못했습니다.</div>';
   }
 }
 
-window.v33ToggleChecklist = v33ToggleChecklist;
+async function v33LoadIdeas() {
+  const client = getSupabaseClient();
+  const tripId = getV33TripId();
+  const placeList = document.getElementById('v33PlaceList');
+  const foodList = document.getElementById('v33FoodList');
+  if (!client || !tripId) return;
 
-function v33RenderDateStrip() {
-  const strip = document.getElementById('v33DateStrip');
-  if (!strip) return;
+  const date = __v33Dates[__v33DateIndex];
+  try {
+    const [{ data: places, error: placesError }, { data: foods, error: foodsError }] = await Promise.all([
+      client.from('trip_places').select('*').eq('trip_id', tripId).eq('trip_date', date).order('created_at', { ascending: true }),
+      client.from('trip_foods').select('*').eq('trip_id', tripId).eq('trip_date', date).order('created_at', { ascending: true }),
+    ]);
+    if (placesError) throw placesError;
+    if (foodsError) throw foodsError;
 
-  strip.innerHTML = __v33Dates.map((dateKey, index) => {
-    const date = new Date(`${dateKey}T12:00:00`);
-    return `
-      <button type="button"
-        class="v33-date-chip ${dateKey === __v33SelectedDate ? 'active' : ''}"
-        onclick="v33SelectDate('${dateKey}')">
-        <div class="n">DAY ${index + 1}</div>
-        <div class="d">${date.getMonth() + 1}/${date.getDate()}</div>
-        <div class="n">${date.toLocaleDateString('ko-KR', {weekday:'short'})}</div>
-      </button>
-    `;
-  }).join('');
+    const placeIds = (places || []).map(x => x.id);
+    const foodIds = (foods || []).map(x => x.id);
+    const [{ data: placeVotes }, { data: foodVotes }] = await Promise.all([
+      placeIds.length ? client.from('trip_place_votes').select('place_id,user_id').in('place_id', placeIds) : Promise.resolve({ data: [] }),
+      foodIds.length ? client.from('trip_food_votes').select('food_id,user_id').in('food_id', foodIds) : Promise.resolve({ data: [] }),
+    ]);
 
-  const active = strip.querySelector('.active');
-  if (active) active.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
-}
+    const userId = await v33GetCurrentUserId();
+    const placeVoteMap = {};
+    const foodVoteMap = {};
+    (placeVotes || []).forEach(v => {
+      if (!placeVoteMap[v.place_id]) placeVoteMap[v.place_id] = { count: 0, mine: false };
+      placeVoteMap[v.place_id].count += 1;
+      if (v.user_id === userId) placeVoteMap[v.place_id].mine = true;
+    });
+    (foodVotes || []).forEach(v => {
+      if (!foodVoteMap[v.food_id]) foodVoteMap[v.food_id] = { count: 0, mine: false };
+      foodVoteMap[v.food_id].count += 1;
+      if (v.user_id === userId) foodVoteMap[v.food_id].mine = true;
+    });
 
-function v33RenderSelectedDay() {
-  const list = document.getElementById('v33ScheduleList');
-  const label = document.getElementById('v33DayLabel');
-  const date = document.getElementById('v33DayDate');
-  const sub = document.getElementById('v33DaySub');
-  const prev = document.getElementById('v33PrevDay');
-  const next = document.getElementById('v33NextDay');
+    if (placeList) {
+      placeList.innerHTML = (places || []).map(item => {
+        const vote = placeVoteMap[item.id] || { count: 0, mine: false };
+        return `
+          <div class="v33-idea">
+            <div class="v33-idea-text">
+              <strong>📍 ${escapeHtml(item.place_name)}</strong>
+              ${item.description ? `<small>${escapeHtml(item.description)}</small>` : ''}
+            </div>
+            <div class="v33-idea-actions">
+              <button class="v33-vote ${vote.mine ? 'active' : ''}" onclick="toggleV33PlaceVote('${item.id}')">❤️ ${vote.count}</button>
+              <button class="v33-delete" onclick="deleteV33Place('${item.id}')">삭제</button>
+            </div>
+          </div>
+        `;
+      }).join('') || '<div class="v33-empty">아직 추천한 장소가 없습니다.</div>';
+    }
 
-  if (!list || !__v33SelectedDate) return;
-
-  const dayNumber = v33DayNumber(__v33SelectedDate);
-  if (label) label.textContent = `DAY ${dayNumber}`;
-  if (date) date.textContent = v33FormatDate(__v33SelectedDate);
-
-  const stayMap = {
-    '2026-08-23': '다낭 도착 · Florence',
-    '2026-08-24': 'Florence → Bel Marina',
-    '2026-08-27': 'Bel Marina → Hyatt',
-    '2026-08-29': 'Hyatt → Altara',
-    '2026-09-04': '귀국일'
-  };
-  if (sub) sub.textContent = stayMap[__v33SelectedDate] || '다낭 여행';
-
-  const schedules = __v33Schedules
-    .filter(item => v33DateKey(item.schedule_date) === __v33SelectedDate)
-    .sort((a,b) => Number(a.sort_order||0) - Number(b.sort_order||0));
-
-  list.innerHTML = schedules.length
-    ? schedules.map(item => `
-        <div class="v33-schedule">
-          <div class="v33-time">DAY ${dayNumber}</div>
-          <div class="v33-title">${escapeHtml(item.title)}</div>
-          ${item.description ? `<div class="v33-desc">${escapeHtml(item.description)}</div>` : ''}
-        </div>
-      `).join('')
-    : `<div class="v33-empty">이 날짜에는 아직 일정이 없습니다.</div>`;
-
-  const index = __v33Dates.indexOf(__v33SelectedDate);
-  if (prev) prev.disabled = index <= 0;
-  if (next) next.disabled = index >= __v33Dates.length - 1;
-}
-
-function v33SelectDate(dateKey) {
-  if (!__v33Dates.includes(dateKey)) return;
-  __v33SelectedDate = dateKey;
-
-  if (__v33Trip?.id) {
-    localStorage.setItem(`${V33_SELECTED_DATE_PREFIX}${__v33Trip.id}`, dateKey);
-  }
-
-  v33RenderDateStrip();
-  v33RenderSelectedDay();
-}
-
-window.v33SelectDate = v33SelectDate;
-
-function v33MoveDay(delta) {
-  const index = __v33Dates.indexOf(__v33SelectedDate);
-  const nextIndex = index + delta;
-  if (index < 0 || nextIndex < 0 || nextIndex >= __v33Dates.length) return;
-  v33SelectDate(__v33Dates[nextIndex]);
-}
-
-function v33InitNavigation() {
-  const prev = document.getElementById('v33PrevDay');
-  const next = document.getElementById('v33NextDay');
-
-  if (prev && !prev.dataset.bound) {
-    prev.dataset.bound = '1';
-    prev.addEventListener('click', () => v33MoveDay(-1));
-  }
-  if (next && !next.dataset.bound) {
-    next.dataset.bound = '1';
-    next.addEventListener('click', () => v33MoveDay(1));
+    if (foodList) {
+      foodList.innerHTML = (foods || []).map(item => {
+        const vote = foodVoteMap[item.id] || { count: 0, mine: false };
+        return `
+          <div class="v33-idea">
+            <div class="v33-idea-text">
+              <strong>🍜 ${escapeHtml(item.food_name)}</strong>
+              ${item.description ? `<small>${escapeHtml(item.description)}</small>` : ''}
+            </div>
+            <div class="v33-idea-actions">
+              <button class="v33-vote ${vote.mine ? 'active' : ''}" onclick="toggleV33FoodVote('${item.id}')">❤️ ${vote.count}</button>
+              <button class="v33-delete" onclick="deleteV33Food('${item.id}')">삭제</button>
+            </div>
+          </div>
+        `;
+      }).join('') || '<div class="v33-empty">아직 추천한 메뉴가 없습니다.</div>';
+    }
+  } catch (error) {
+    console.error('장소/메뉴 조회 실패:', error);
+    if (placeList) placeList.innerHTML = '<div class="v33-empty">장소 정보를 불러오지 못했습니다.</div>';
+    if (foodList) foodList.innerHTML = '<div class="v33-empty">메뉴 정보를 불러오지 못했습니다.</div>';
   }
 }
 
-async function initV33Planner(trip) {
-  if (!document.getElementById('v33Planner') || !trip?.id) return;
+function renderV33Date() {
+  const date = __v33Dates[__v33DateIndex];
+  const title = document.getElementById('v33DateTitle');
+  const subtitle = document.getElementById('v33DateSubtitle');
+  const prev = document.getElementById('v33PrevDate');
+  const next = document.getElementById('v33NextDate');
+  const dayNo = document.getElementById('v33DayNo');
+  if (!date) return;
 
-  __v33Trip = trip;
-  __v33Dates = v33DateRange(trip.start_date, trip.end_date);
-  if (!__v33Dates.length) return;
+  const formatted = v33FormatDate(date);
+  if (title) title.textContent = formatted.monthDay;
+  if (subtitle) subtitle.textContent = formatted.weekday;
+  if (dayNo) dayNo.textContent = `DAY ${__v33DateIndex + 1}`;
+  if (prev) prev.disabled = __v33DateIndex <= 0;
+  if (next) next.disabled = __v33DateIndex >= __v33Dates.length - 1;
 
-  const saved = localStorage.getItem(`${V33_SELECTED_DATE_PREFIX}${trip.id}`);
-  __v33SelectedDate = saved && __v33Dates.includes(saved) ? saved : __v33Dates[0];
-
-  v33InitNavigation();
-  v33RenderDateStrip();
-  v33RenderSelectedDay();
-
-  await v33EnsureSchedules(trip);
-  await v33LoadChecklist(trip.id);
-
-  v33RenderDateStrip();
-  v33RenderSelectedDay();
+  const scheduleDate = document.getElementById('v33ScheduleDate');
+  const placeDate = document.getElementById('v33PlaceDate');
+  const foodDate = document.getElementById('v33FoodDate');
+  if (scheduleDate) scheduleDate.value = date;
+  if (placeDate) placeDate.value = date;
+  if (foodDate) foodDate.value = date;
 }
 
-// 기존 V3-1의 여행방 상태 표시 함수에 V3-3 초기화를 연결
-const __v33BaseSetTripStatus = setTripStatus;
-setTripStatus = function(trip, nickname) {
-  __v33BaseSetTripStatus(trip, nickname);
-  if (trip?.id) initV33Planner(trip);
-};
+async function loadV33Date() {
+  renderV33Date();
+  await Promise.all([v33LoadSchedules(), v33LoadIdeas()]);
+}
+
+function changeV33Date(delta) {
+  const nextIndex = __v33DateIndex + delta;
+  if (nextIndex < 0 || nextIndex >= __v33Dates.length) return;
+  __v33DateIndex = nextIndex;
+  loadV33Date();
+}
+
+async function addV33Schedule() {
+  const client = getSupabaseClient();
+  const tripId = getV33TripId();
+  const date = document.getElementById('v33ScheduleDate')?.value;
+  const title = document.getElementById('v33ScheduleTitle')?.value.trim();
+  const description = document.getElementById('v33ScheduleDescription')?.value.trim() || null;
+  if (!client || !tripId) return v33Message('여행방을 먼저 만들어주세요.', 'error');
+  if (!date || !title) return v33Message('일정 날짜와 제목을 입력해주세요.', 'error');
+
+  try {
+    await ensureAnonymousSession();
+    const userId = await v33GetCurrentUserId();
+    const { error } = await client.from('trip_schedules').insert({ trip_id: tripId, schedule_date: date, title, description, created_by: userId });
+    if (error) throw error;
+    document.getElementById('v33ScheduleTitle').value = '';
+    document.getElementById('v33ScheduleDescription').value = '';
+    v33Message('일정을 추가했습니다. 📅', 'success');
+    await v33LoadSchedules();
+  } catch (error) {
+    console.error(error);
+    v33Message(`일정 추가 실패: ${error.message || error}`, 'error');
+  }
+}
+
+async function deleteV33Schedule(id) {
+  if (!confirm('이 일정을 삭제할까요?')) return;
+  const client = getSupabaseClient();
+  if (!client) return;
+  const { error } = await client.from('trip_schedules').delete().eq('id', id);
+  if (error) return v33Message(`일정 삭제 실패: ${error.message || error}`, 'error');
+  await v33LoadSchedules();
+}
+
+async function toggleV33Checklist(id, checked) {
+  const client = getSupabaseClient();
+  if (!client) return;
+  try {
+    const userId = await v33GetCurrentUserId();
+    const { error } = await client.from('trip_checklist').update({ checked, updated_by: userId, updated_at: new Date().toISOString() }).eq('id', id);
+    if (error) throw error;
+    await v33LoadChecklist();
+  } catch (error) {
+    console.error(error);
+    v33Message(`체크 저장 실패: ${error.message || error}`, 'error');
+  }
+}
+
+async function addV33Place() {
+  const client = getSupabaseClient();
+  const tripId = getV33TripId();
+  const date = document.getElementById('v33PlaceDate')?.value;
+  const name = document.getElementById('v33PlaceName')?.value.trim();
+  const description = document.getElementById('v33PlaceDescription')?.value.trim() || null;
+  if (!client || !tripId) return v33Message('여행방을 먼저 만들어주세요.', 'error');
+  if (!date || !name) return v33Message('장소 이름을 입력해주세요.', 'error');
+
+  try {
+    const userId = await v33GetCurrentUserId();
+    const { error } = await client.from('trip_places').insert({ trip_id: tripId, trip_date: date, place_name: name, description, created_by: userId });
+    if (error) throw error;
+    document.getElementById('v33PlaceName').value = '';
+    document.getElementById('v33PlaceDescription').value = '';
+    v33Message('가고 싶은 장소를 추가했습니다. 📍', 'success');
+    await v33LoadIdeas();
+  } catch (error) {
+    console.error(error);
+    v33Message(`장소 추가 실패: ${error.message || error}`, 'error');
+  }
+}
+
+async function deleteV33Place(id) {
+  if (!confirm('이 장소를 삭제할까요?')) return;
+  const client = getSupabaseClient();
+  if (!client) return;
+  const { error } = await client.from('trip_places').delete().eq('id', id);
+  if (error) return v33Message(`장소 삭제 실패: ${error.message || error}`, 'error');
+  await v33LoadIdeas();
+}
+
+async function toggleV33PlaceVote(id) {
+  const client = getSupabaseClient();
+  if (!client) return;
+  try {
+    const userId = await v33GetCurrentUserId();
+    const { data: existing, error: findError } = await client.from('trip_place_votes').select('id').eq('place_id', id).eq('user_id', userId).maybeSingle();
+    if (findError) throw findError;
+    if (existing) {
+      const { error } = await client.from('trip_place_votes').delete().eq('id', existing.id);
+      if (error) throw error;
+    } else {
+      const { error } = await client.from('trip_place_votes').insert({ place_id: id, user_id: userId });
+      if (error) throw error;
+    }
+    await v33LoadIdeas();
+  } catch (error) {
+    console.error(error);
+    v33Message(`추천 처리 실패: ${error.message || error}`, 'error');
+  }
+}
+
+async function addV33Food() {
+  const client = getSupabaseClient();
+  const tripId = getV33TripId();
+  const date = document.getElementById('v33FoodDate')?.value;
+  const name = document.getElementById('v33FoodName')?.value.trim();
+  const description = document.getElementById('v33FoodDescription')?.value.trim() || null;
+  if (!client || !tripId) return v33Message('여행방을 먼저 만들어주세요.', 'error');
+  if (!date || !name) return v33Message('메뉴 이름을 입력해주세요.', 'error');
+
+  try {
+    const userId = await v33GetCurrentUserId();
+    const { error } = await client.from('trip_foods').insert({ trip_id: tripId, trip_date: date, food_name: name, description, created_by: userId });
+    if (error) throw error;
+    document.getElementById('v33FoodName').value = '';
+    document.getElementById('v33FoodDescription').value = '';
+    v33Message('먹고 싶은 메뉴를 추가했습니다. 🍜', 'success');
+    await v33LoadIdeas();
+  } catch (error) {
+    console.error(error);
+    v33Message(`메뉴 추가 실패: ${error.message || error}`, 'error');
+  }
+}
+
+async function deleteV33Food(id) {
+  if (!confirm('이 메뉴를 삭제할까요?')) return;
+  const client = getSupabaseClient();
+  if (!client) return;
+  const { error } = await client.from('trip_foods').delete().eq('id', id);
+  if (error) return v33Message(`메뉴 삭제 실패: ${error.message || error}`, 'error');
+  await v33LoadIdeas();
+}
+
+async function toggleV33FoodVote(id) {
+  const client = getSupabaseClient();
+  if (!client) return;
+  try {
+    const userId = await v33GetCurrentUserId();
+    const { data: existing, error: findError } = await client.from('trip_food_votes').select('id').eq('food_id', id).eq('user_id', userId).maybeSingle();
+    if (findError) throw findError;
+    if (existing) {
+      const { error } = await client.from('trip_food_votes').delete().eq('id', existing.id);
+      if (error) throw error;
+    } else {
+      const { error } = await client.from('trip_food_votes').insert({ food_id: id, user_id: userId });
+      if (error) throw error;
+    }
+    await v33LoadIdeas();
+  } catch (error) {
+    console.error(error);
+    v33Message(`추천 처리 실패: ${error.message || error}`, 'error');
+  }
+}
+
+async function initV33(trip) {
+  const room = document.getElementById('v33Room');
+  if (!room) return;
+
+  try {
+    const client = getSupabaseClient();
+    if (!client) return;
+    await ensureAnonymousSession();
+
+    if (!trip) {
+      const tripId = getV33TripId();
+      if (!tripId) return;
+      const { data } = await client.from('trips').select('id,name,trip_code,start_date,end_date,created_by').eq('id', tripId).maybeSingle();
+      trip = data;
+    }
+    if (!trip) return;
+
+    __v33Trip = trip;
+    __v33Dates = v33BuildDates(trip.start_date, trip.end_date);
+    if (!__v33Dates.length) return;
+
+    const currentDate = new Date().toISOString().slice(0, 10);
+    const currentIndex = __v33Dates.indexOf(currentDate);
+    if (currentIndex >= 0) __v33DateIndex = currentIndex;
+    else __v33DateIndex = Math.min(__v33DateIndex, __v33Dates.length - 1);
+
+    await v33EnsureChecklist(trip.id);
+    await v33EnsureDefaultSchedules(trip);
+    renderV33Date();
+    await Promise.all([v33LoadChecklist(), loadV33Date()]);
+
+    if (__v33RefreshTimer) clearInterval(__v33RefreshTimer);
+    __v33RefreshTimer = setInterval(async () => {
+      if (document.hidden) return;
+      await Promise.all([v33LoadChecklist(), v33LoadSchedules(), v33LoadIdeas()]);
+    }, 10000);
+  } catch (error) {
+    console.error('V3-3 초기화 실패:', error);
+    v33Message(`여행 계획을 불러오지 못했습니다: ${error.message || error}`, 'error');
+  }
+}
+
+window.changeV33Date = changeV33Date;
+window.addV33Schedule = addV33Schedule;
+window.deleteV33Schedule = deleteV33Schedule;
+window.toggleV33Checklist = toggleV33Checklist;
+window.addV33Place = addV33Place;
+window.deleteV33Place = deleteV33Place;
+window.toggleV33PlaceVote = toggleV33PlaceVote;
+window.addV33Food = addV33Food;
+window.deleteV33Food = deleteV33Food;
+window.toggleV33FoodVote = toggleV33FoodVote;
+

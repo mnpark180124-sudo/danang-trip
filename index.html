@@ -24,303 +24,40 @@
 
 
 <style>
-/* ============================================================
-   V3-3 UI
-   ============================================================ */
-.v33-planner {
-  overflow: hidden;
-}
-
-.v33-planner-head {
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:12px;
-  margin-bottom:16px;
-}
-
-.v33-kicker {
-  font-size:.72rem;
-  letter-spacing:.08em;
-  font-weight:800;
-  color:#0B4F6C;
-  margin-bottom:3px;
-}
-
-.v33-subtitle {
-  font-size:.82rem;
-  color:#6b7280;
-}
-
-.v33-live-dot {
-  display:flex;
-  align-items:center;
-  gap:5px;
-  font-size:.72rem;
-  color:#147a4b;
-  white-space:nowrap;
-}
-
-.v33-live-dot span {
-  width:7px;
-  height:7px;
-  border-radius:50%;
-  background:#22a06b;
-  display:inline-block;
-}
-
-.v33-check-card {
-  border:1px solid rgba(11,79,108,.14);
-  border-radius:16px;
-  padding:14px;
-  background:rgba(11,79,108,.045);
-  margin-bottom:18px;
-}
-
-.v33-section-head {
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:10px;
-  margin-bottom:10px;
-}
-
-.v33-section-head strong {
-  font-size:.78rem;
-  color:#0B4F6C;
-  white-space:nowrap;
-}
-
-.v33-section-title {
-  font-weight:800;
-  font-size:1rem;
-}
-
-.v33-section-desc {
-  font-size:.76rem;
-  color:#777;
-  margin-top:2px;
-}
-
-.v33-check-list {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-}
-
-.v33-check-item {
-  display:flex;
-  align-items:center;
-  gap:8px;
-  min-height:48px;
-  padding:10px 11px;
-  background:#fff;
-  border:1px solid #e1e5e9;
-  border-radius:12px;
-  cursor:pointer;
-  margin:0;
-  transition:.15s ease;
-}
-
-.v33-check-item input {
-  width:20px;
-  height:20px;
-  accent-color:#0B4F6C;
-  flex:0 0 auto;
-}
-
-.v33-check-item span:nth-child(2) {
-  font-weight:700;
-  font-size:.9rem;
-}
-
-.v33-check-item.is-checked {
-  background:#f0f8f5;
-  border-color:#b9decf;
-}
-
-.v33-check-item.is-checked span:nth-child(2) {
-  text-decoration:line-through;
-  color:#7b8a83;
-}
-
-.v33-check-mark {
-  margin-left:auto;
-  font-weight:900;
-  color:#147a4b;
-}
-
-.v33-day-nav {
-  display:grid;
-  grid-template-columns:48px 1fr 48px;
-  align-items:center;
-  gap:8px;
-  padding:8px 0 16px;
-}
-
-.v33-day-arrow {
-  width:48px;
-  height:48px;
-  border:1px solid #d9e0e5;
-  border-radius:50%;
-  background:#fff;
-  color:#0B4F6C;
-  font-size:2rem;
-  line-height:1;
-  cursor:pointer;
-}
-
-.v33-day-arrow:disabled {
-  opacity:.3;
-  cursor:not-allowed;
-}
-
-.v33-day-center {
-  text-align:center;
-}
-
-.v33-day-number {
-  font-family:var(--font-mono, monospace);
-  font-size:.9rem;
-  font-weight:800;
-  letter-spacing:.08em;
-  color:#0B4F6C;
-}
-
-.v33-date-label {
-  margin-top:2px;
-  font-size:1.08rem;
-  font-weight:800;
-}
-
-.v33-section {
-  border-top:1px solid #eceff1;
-  padding-top:16px;
-  margin-top:4px;
-}
-
-.v33-section-last {
-  padding-bottom:2px;
-}
-
-.v33-list {
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-
-.v33-schedule-item,
-.v33-recommend-item {
-  display:flex;
-  align-items:center;
-  gap:9px;
-  padding:11px 10px;
-  border:1px solid #e7eaed;
-  border-radius:12px;
-  background:#fff;
-}
-
-.v33-schedule-icon {
-  width:32px;
-  height:32px;
-  border-radius:10px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#f3f6f8;
-  flex:0 0 auto;
-}
-
-.v33-schedule-body,
-.v33-recommend-main {
-  min-width:0;
-  flex:1;
-}
-
-.v33-schedule-title,
-.v33-recommend-title {
-  font-weight:750;
-  font-size:.91rem;
-  word-break:break-word;
-}
-
-.v33-schedule-desc,
-.v33-recommend-desc {
-  margin-top:3px;
-  color:#70757a;
-  font-size:.76rem;
-  line-height:1.4;
-  word-break:break-word;
-}
-
-.v33-vote {
-  border:1px solid #e2e5e8;
-  background:#fff;
-  border-radius:999px;
-  min-width:48px;
-  height:34px;
-  padding:0 9px;
-  color:#777;
-  font-weight:800;
-  cursor:pointer;
-}
-
-.v33-vote.voted {
-  border-color:#f2b6b0;
-  background:#fff5f3;
-  color:#d94a3d;
-}
-
-.v33-mini-delete {
-  border:0;
-  background:transparent;
-  color:#a0a6aa;
-  font-size:1.25rem;
-  width:28px;
-  height:28px;
-  padding:0;
-  cursor:pointer;
-  flex:0 0 auto;
-}
-
-.v33-add-box {
-  display:grid;
-  gap:7px;
-  margin-top:10px;
-}
-
-.v33-add-box input {
-  font-size:.86rem;
-}
-
-.v33-loading,
-.v33-empty {
-  padding:15px 8px;
-  text-align:center;
-  color:#858b90;
-  font-size:.82rem;
-  line-height:1.5;
-}
-
-.v33-message {
-  min-height:22px;
-  margin-top:10px;
-  font-size:.82rem;
-}
-
+.v33-room { overflow: hidden; }
+.v33-date-nav { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 0 16px; }
+.v33-date-side { width:44px; height:44px; border:1px solid #d7dee4; border-radius:50%; background:#fff; font-size:1.2rem; }
+.v33-date-side:disabled { opacity:.3; }
+.v33-date-center { text-align:center; flex:1; }
+.v33-day { font-size:.78rem; font-weight:800; color:#0B4F6C; letter-spacing:.06em; }
+.v33-date-title { font-size:1.55rem; font-weight:800; line-height:1.2; }
+.v33-date-subtitle { color:#6b7280; font-size:.85rem; }
+.v33-section { border-top:1px solid #edf0f2; padding-top:16px; margin-top:16px; }
+.v33-section-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.v33-section-title h6 { margin:0; font-weight:800; }
+.v33-checklist { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.v33-check { display:flex; align-items:center; gap:8px; padding:12px; border:1px solid #e2e7eb; border-radius:12px; cursor:pointer; background:#fff; font-weight:600; }
+.v33-check input { display:none; }
+.v33-check-icon { width:22px; height:22px; border:1.5px solid #b9c3ca; border-radius:7px; display:grid; place-items:center; font-size:.78rem; color:#fff; flex:0 0 auto; }
+.v33-check.is-checked { background:#f0f7fa; border-color:#b7d0dc; color:#0B4F6C; }
+.v33-check.is-checked .v33-check-icon { background:#0B4F6C; border-color:#0B4F6C; }
+.v33-item, .v33-idea { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px 0; border-bottom:1px solid #edf0f2; }
+.v33-item-main, .v33-idea-text { min-width:0; flex:1; }
+.v33-item-main strong, .v33-idea-text strong { display:block; }
+.v33-item-main div, .v33-idea-text small { display:block; margin-top:3px; color:#6b7280; line-height:1.4; }
+.v33-delete { border:0; background:transparent; color:#9ca3af; font-size:.75rem; padding:4px 5px; }
+.v33-delete:hover { color:#b42318; }
+.v33-idea-actions { display:flex; align-items:center; gap:4px; }
+.v33-vote { border:1px solid #e1e5e8; border-radius:999px; background:#fff; padding:6px 10px; font-size:.8rem; white-space:nowrap; }
+.v33-vote.active { background:#fff1f2; border-color:#fecdd3; color:#be123c; }
+.v33-add-form { background:#f7f9fa; border-radius:12px; padding:10px; margin-top:10px; }
+.v33-add-form .form-control { margin-bottom:7px; }
+.v33-message { min-height:20px; font-size:.82rem; margin-top:8px; }
 .v33-message.success { color:#147a4b; }
 .v33-message.error { color:#b42318; }
 .v33-message.info { color:#0B4F6C; }
-
-@media (max-width: 520px) {
-  .v33-check-list {
-    grid-template-columns:1fr;
-  }
-
-  .v33-planner-head {
-    align-items:center;
-  }
-}
+.v33-empty { color:#9ca3af; text-align:center; padding:14px 4px; font-size:.85rem; }
+@media (max-width: 480px) { .v33-checklist { grid-template-columns:1fr 1fr; } .v33-date-title { font-size:1.4rem; } }
 </style>
 
 </head><body>
@@ -372,110 +109,67 @@
       <span class="text-muted">아직 참여한 여행방이 없습니다.</span>
     </div>
   </div>
-</div>
+
 
 <!-- ============================================================
-     V3-3 · 날짜별 여행 플래너
+     V3-3 날짜별 여행 계획 / 공동 체크리스트 / 추천
      ============================================================ -->
-<div id="v33Planner" class="card hotel-card mb-4 v33-planner">
+<div id="v33Room" class="card hotel-card mb-4 v33-room">
   <div class="card-body">
-
-    <div class="v33-planner-head">
-      <div>
-        <div class="v33-kicker">V3-3 · TOGETHER</div>
-        <h5 class="card-title mb-1">📅 <span id="v33TripName">여행 일정</span></h5>
-        <div id="v33TotalDays" class="v33-subtitle">여행 기간</div>
-      </div>
-      <div class="v33-live-dot"><span></span>공동 사용</div>
+    <div class="v33-section-title" style="border:0;margin:0">
+      <h5 class="card-title mb-0"><i class="bi bi-calendar3"></i> 여행 일정</h5>
+      <span class="small text-muted">함께 편집</span>
     </div>
 
-    <!-- 공동 체크리스트 -->
-    <div class="v33-check-card">
-      <div class="v33-section-head">
-        <div>
-          <div class="v33-section-title">☑️ 출발 전 체크</div>
-          <div class="v33-section-desc">한 사람이 체크하면 모두에게 반영됩니다.</div>
-        </div>
-        <strong id="v33ChecklistCount">0 / 4 완료</strong>
+    <div class="v33-date-nav">
+      <button id="v33PrevDate" class="v33-date-side" onclick="changeV33Date(-1)" aria-label="이전 날짜">‹</button>
+      <div class="v33-date-center">
+        <div id="v33DayNo" class="v33-day">DAY 1</div>
+        <div id="v33DateTitle" class="v33-date-title">날짜</div>
+        <div id="v33DateSubtitle" class="v33-date-subtitle">요일</div>
       </div>
-
-      <div id="v33Checklist" class="v33-check-list">
-        <div class="v33-loading">체크리스트를 불러오는 중...</div>
-      </div>
+      <button id="v33NextDate" class="v33-date-side" onclick="changeV33Date(1)" aria-label="다음 날짜">›</button>
     </div>
 
-    <!-- 날짜 네비게이션 -->
-    <div class="v33-day-nav">
-      <button id="v33PrevDay" class="v33-day-arrow" onclick="v33ChangeDay(-1)" aria-label="이전 날짜">‹</button>
-      <div class="v33-day-center">
-        <div id="v33DayNumber" class="v33-day-number">DAY 1</div>
-        <div id="v33DateLabel" class="v33-date-label">날짜를 불러오는 중...</div>
-      </div>
-      <button id="v33NextDay" class="v33-day-arrow" onclick="v33ChangeDay(1)" aria-label="다음 날짜">›</button>
-    </div>
-
-    <!-- 일정 -->
     <div class="v33-section">
-      <div class="v33-section-head">
-        <div>
-          <div class="v33-section-title">🗓️ 오늘 일정</div>
-          <div class="v33-section-desc">여행방 참여자 모두가 일정을 추가할 수 있어요.</div>
-        </div>
-      </div>
-
-      <div id="v33ScheduleList" class="v33-list">
-        <div class="v33-loading">일정을 불러오는 중...</div>
-      </div>
-
-      <div class="v33-add-box">
-        <input id="v33ScheduleTitle" class="form-control" maxlength="80" placeholder="예: 호이안 올드타운 산책">
-        <input id="v33ScheduleDesc" class="form-control" maxlength="120" placeholder="메모 · 시간 · 장소 등 (선택)">
-        <button class="btn btn-primary btn-round w-100" onclick="v33AddSchedule()">＋ 일정 추가</button>
+      <div class="v33-section-title"><h6>📅 오늘 일정</h6></div>
+      <div id="v33ScheduleList"></div>
+      <div class="v33-add-form">
+        <input id="v33ScheduleDate" type="hidden">
+        <input id="v33ScheduleTitle" class="form-control" type="text" maxlength="80" placeholder="일정 추가 · 예: 바나힐 이동">
+        <input id="v33ScheduleDescription" class="form-control" type="text" maxlength="160" placeholder="시간이나 메모 (선택사항)">
+        <button class="btn btn-outline-primary btn-sm btn-round w-100" onclick="addV33Schedule()">＋ 일정 추가</button>
       </div>
     </div>
 
-    <!-- 장소 -->
     <div class="v33-section">
-      <div class="v33-section-head">
-        <div>
-          <div class="v33-section-title">📍 가고 싶은 장소</div>
-          <div class="v33-section-desc">❤️가 많은 장소를 우선순위로 정해보세요.</div>
-        </div>
-      </div>
+      <div class="v33-section-title"><h6>☑️ 출발 전 공동 체크</h6></div>
+      <div id="v33Checklist" class="v33-checklist"></div>
+    </div>
 
-      <div id="v33PlaceList" class="v33-list">
-        <div class="v33-loading">장소를 불러오는 중...</div>
-      </div>
-
-      <div class="v33-add-box">
-        <input id="v33PlaceName" class="form-control" maxlength="80" placeholder="예: 안방비치">
-        <input id="v33PlaceDesc" class="form-control" maxlength="120" placeholder="가고 싶은 이유 (선택)">
-        <button class="btn btn-outline-primary btn-round w-100" onclick="v33AddPlace()">＋ 가고 싶은 장소 추가</button>
+    <div class="v33-section">
+      <div class="v33-section-title"><h6>📍 가고 싶은 장소</h6><span class="small text-muted">❤️ 추천</span></div>
+      <div id="v33PlaceList"></div>
+      <div class="v33-add-form">
+        <input id="v33PlaceDate" type="hidden">
+        <input id="v33PlaceName" class="form-control" type="text" maxlength="80" placeholder="예: 바나힐">
+        <input id="v33PlaceDescription" class="form-control" type="text" maxlength="160" placeholder="메모 · 가고 싶은 이유 (선택사항)">
+        <button class="btn btn-outline-primary btn-sm btn-round w-100" onclick="addV33Place()">＋ 장소 추가</button>
       </div>
     </div>
 
-    <!-- 메뉴 -->
-    <div class="v33-section v33-section-last">
-      <div class="v33-section-head">
-        <div>
-          <div class="v33-section-title">🍜 먹고 싶은 메뉴</div>
-          <div class="v33-section-desc">여행 중 먹을 메뉴를 미리 모아보세요.</div>
-        </div>
-      </div>
-
-      <div id="v33FoodList" class="v33-list">
-        <div class="v33-loading">메뉴를 불러오는 중...</div>
-      </div>
-
-      <div class="v33-add-box">
-        <input id="v33FoodName" class="form-control" maxlength="80" placeholder="예: 반쎄오">
-        <input id="v33FoodDesc" class="form-control" maxlength="120" placeholder="맛집/메모 (선택)">
-        <button class="btn btn-outline-primary btn-round w-100" onclick="v33AddFood()">＋ 먹고 싶은 메뉴 추가</button>
+    <div class="v33-section">
+      <div class="v33-section-title"><h6>🍜 먹고 싶은 메뉴</h6><span class="small text-muted">❤️ 추천</span></div>
+      <div id="v33FoodList"></div>
+      <div class="v33-add-form">
+        <input id="v33FoodDate" type="hidden">
+        <input id="v33FoodName" class="form-control" type="text" maxlength="80" placeholder="예: 반쎄오">
+        <input id="v33FoodDescription" class="form-control" type="text" maxlength="160" placeholder="메모 · 먹고 싶은 이유 (선택사항)">
+        <button class="btn btn-outline-primary btn-sm btn-round w-100" onclick="addV33Food()">＋ 메뉴 추가</button>
       </div>
     </div>
 
     <div id="v33Message" class="v33-message"></div>
-
   </div>
 </div>
 
