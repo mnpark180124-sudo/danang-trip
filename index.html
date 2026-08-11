@@ -22,6 +22,44 @@
 .trip-member { background: #f3f4f6; border-radius: 999px; padding: 5px 9px; font-size: .82rem; }
 </style>
 
+
+<style>
+.v33-card { overflow:hidden; }
+.v33-section-title { display:flex; align-items:center; gap:8px; }
+.v33-section-title .v33-icon { font-size:1.2rem; }
+.v33-checklist { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.v33-check-item { display:flex; align-items:center; gap:9px; padding:13px 12px; border:1px solid #e4e7eb; border-radius:14px; background:#fff; cursor:pointer; transition:.15s ease; }
+.v33-check-item:active { transform:scale(.99); }
+.v33-check-item input { width:20px; height:20px; accent-color:#0B4F6C; flex:0 0 auto; }
+.v33-check-item .check-name { font-weight:700; }
+.v33-check-item.checked { background:#f2f7fa; border-color:#b9d2df; }
+.v33-check-item.checked .check-name { text-decoration:line-through; color:#71808a; }
+.v33-check-status { font-size:.78rem; color:#66737d; margin-top:8px; }
+.v33-daybar { display:grid; grid-template-columns:44px 1fr 44px; align-items:center; gap:8px; margin-bottom:12px; }
+.v33-day-arrow { width:44px; height:44px; border:1px solid #d7dfe4; border-radius:13px; background:#fff; font-size:1.25rem; color:#0B4F6C; }
+.v33-day-arrow:disabled { opacity:.35; }
+.v33-day-center { text-align:center; padding:8px 4px; }
+.v33-day-label { font-size:.78rem; color:#6b7780; }
+.v33-day-date { font-size:1.25rem; font-weight:800; color:#173f55; }
+.v33-day-sub { font-size:.78rem; color:#7a858c; margin-top:2px; }
+.v33-date-strip { display:flex; gap:7px; overflow-x:auto; padding:2px 2px 10px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+.v33-date-strip::-webkit-scrollbar { display:none; }
+.v33-date-chip { flex:0 0 auto; min-width:58px; padding:8px 9px; border:1px solid #dfe5e9; border-radius:12px; background:#fff; text-align:center; color:#58656e; }
+.v33-date-chip .n { font-size:.72rem; }
+.v33-date-chip .d { font-size:.92rem; font-weight:800; margin-top:2px; }
+.v33-date-chip.active { background:#0B4F6C; border-color:#0B4F6C; color:#fff; }
+.v33-schedule { border:1px solid #e3e7ea; border-radius:16px; padding:14px; background:#fff; }
+.v33-schedule + .v33-schedule { margin-top:9px; }
+.v33-time { font-size:.72rem; font-weight:800; color:#0B4F6C; letter-spacing:.02em; margin-bottom:4px; }
+.v33-title { font-size:1rem; font-weight:800; }
+.v33-desc { margin-top:4px; font-size:.83rem; color:#69757d; line-height:1.45; }
+.v33-empty { padding:18px 12px; text-align:center; color:#7b858c; background:#f8fafb; border-radius:14px; }
+@media (max-width:420px) {
+  .v33-checklist { gap:7px; }
+  .v33-check-item { padding:11px 9px; font-size:.9rem; }
+}
+</style>
+
 </head><body>
 <div class='container py-3'>
 
@@ -280,6 +318,47 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+
+<!-- ============================================================
+     V3-3-1 · 공동 체크리스트
+     ============================================================ -->
+<div id="v33Planner" class="card hotel-card mb-4 v33-card">
+  <div class="card-body">
+    <h5 class="card-title mb-3 v33-section-title">
+      <span class="v33-icon">☑️</span> 출발 전 공동 체크
+    </h5>
+    <div id="v33Checklist" class="v33-checklist">
+      <div class="text-muted">체크리스트를 불러오는 중...</div>
+    </div>
+    <div id="v33ChecklistStatus" class="v33-check-status"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     V3-3-1 · 날짜별 여행 플래너
+     ============================================================ -->
+<div id="v33DayPlanner" class="card hotel-card mb-4 v33-card">
+  <div class="card-body">
+    <h5 class="card-title mb-3 v33-section-title">
+      <span class="v33-icon">📅</span> 날짜별 여행 일정
+    </h5>
+    <div id="v33DateStrip" class="v33-date-strip"></div>
+    <div class="v33-daybar">
+      <button id="v33PrevDay" class="v33-day-arrow" type="button" aria-label="이전 날짜">‹</button>
+      <div class="v33-day-center">
+        <div id="v33DayLabel" class="v33-day-label">DAY 1</div>
+        <div id="v33DayDate" class="v33-day-date">-</div>
+        <div id="v33DaySub" class="v33-day-sub">-</div>
+      </div>
+      <button id="v33NextDay" class="v33-day-arrow" type="button" aria-label="다음 날짜">›</button>
+    </div>
+    <div id="v33ScheduleList">
+      <div class="v33-empty">일정을 불러오는 중...</div>
+    </div>
+    <div class="small text-muted text-center mt-3">← → 버튼이나 날짜를 눌러 여행 날짜를 넘겨보세요.</div>
   </div>
 </div>
 
