@@ -323,7 +323,25 @@
 }
 </style>
 
-<style>.v34-stay-summary{margin:0 0 10px;padding:10px 12px;border:1px solid #e5e9ec;border-radius:12px;background:#f8fafb;font-size:.84rem}.v34-stay-status-wrap{min-height:30px;margin:5px 0 7px}.v34-stay-status{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;font-size:.75rem;font-weight:700}.v34-stay-status i{width:7px;height:7px;border-radius:50%;display:inline-block}.v34-stay-status.next{background:#eef6fb;color:#0B4F6C}.v34-stay-status.next i{background:#4b9bc2}.v34-stay-status.checkin,.v34-stay-status.checkout{background:#fff5e8;color:#9a5a00}.v34-stay-status.checkin i,.v34-stay-status.checkout i{background:#e59a2f}.v34-stay-status.current{background:#edf8f2;color:#147a4b}.v34-stay-status.current i{background:#22a06b}.v34-stay-status.done{background:#f1f2f3;color:#777}.v34-stay-status.done i{background:#9aa0a6}</style></head><body>
+<style>.v34-stay-summary{margin:0 0 10px;padding:10px 12px;border:1px solid #e5e9ec;border-radius:12px;background:#f8fafb;font-size:.84rem}.v34-stay-status-wrap{min-height:30px;margin:5px 0 7px}.v34-stay-status{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;font-size:.75rem;font-weight:700}.v34-stay-status i{width:7px;height:7px;border-radius:50%;display:inline-block}.v34-stay-status.next{background:#eef6fb;color:#0B4F6C}.v34-stay-status.next i{background:#4b9bc2}.v34-stay-status.checkin,.v34-stay-status.checkout{background:#fff5e8;color:#9a5a00}.v34-stay-status.checkin i,.v34-stay-status.checkout i{background:#e59a2f}.v34-stay-status.current{background:#edf8f2;color:#147a4b}.v34-stay-status.current i{background:#22a06b}.v34-stay-status.done{background:#f1f2f3;color:#777}.v34-stay-status.done i{background:#9aa0a6}</style><style id="v35-mobile-pages">
+@media(max-width:767.98px){
+body.v35-mobile{overflow-x:hidden;padding-bottom:74px}
+body.v35-mobile .v35-mobile-page{display:none!important;min-height:calc(100vh - 86px);padding-bottom:10px}
+body.v35-mobile .v35-mobile-page.v35-active{display:block!important}
+body.v35-mobile .v35-page-shell{min-height:calc(100vh - 100px);display:flex;flex-direction:column}
+body.v35-mobile .v35-page-title{font-size:1.18rem;font-weight:900;margin:4px 0 12px}
+body.v35-mobile .v35-page-sub{color:#777;font-size:.82rem;margin:-7px 0 12px}
+body.v35-mobile .container> :not(#v35MobileApp){display:none!important}
+.v35-page-nav{position:fixed;z-index:9999;left:0;right:0;bottom:0;display:flex;justify-content:space-around;height:68px;background:rgba(255,255,255,.97);border-top:1px solid #e5e7eb;padding:5px 4px}
+.v35-nav-btn{border:0;background:none;min-width:62px;height:56px;border-radius:13px;color:#777;font-size:.66rem;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.v35-nav-btn .ico{font-size:1.18rem}.v35-nav-btn.active{background:#eef5f8;color:#0B4F6C}
+.v35-page-dots{display:flex;justify-content:center;gap:5px;margin:3px 0 10px}
+.v35-dot{width:6px;height:6px;border-radius:50%;background:#d4d8dc}.v35-dot.active{width:18px;border-radius:5px;background:#0B4F6C}
+.v35-swipe-hint{text-align:center;font-size:.7rem;color:#9aa0a6;margin:0 0 7px}
+.v35-next-btn{width:100%;border:0;border-radius:13px;padding:11px;background:#f3f6f7;color:#0B4F6C;font-weight:800}
+}
+@media(min-width:768px){#v35MobileApp{display:none!important}}
+</style></head><body>
 <div class='container py-3'>
 
 <div id='installBanner' class='alert d-none align-items-center justify-content-between install-alert' role='alert'>
@@ -790,4 +808,15 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src='app.js'></script>
-</body></html>
+<div id="v35MobileApp" class="container">
+<div class="v35-page-dots" id="v35PageDots"></div><div class="v35-swipe-hint">← 좌우로 넘기거나 아래 메뉴를 눌러 이동</div>
+<section class="v35-mobile-page v35-active"><div class="v35-page-shell"><div class="v35-page-title">✈️ 항공권 정보</div><div class="v35-page-sub">출국 · 귀국 항공편</div><div class="card hotel-card"><div class="card-body"><h5>🇰🇷 인천 → 다낭</h5><p>KE459 · 18:20 출발 → 21:05 도착</p><hr><h5>🇻🇳 다낭 → 인천</h5><p>KE460 · 22:55 출발</p></div></div><button class="v35-next-btn" onclick="v35Go(1)">환율 & 날씨 →</button></div></section>
+<section class="v35-mobile-page"><div class="v35-page-shell"><div class="v35-page-title">💱 환율 & 🌤 날씨</div><div class="v35-page-sub">여행 중 자주 확인하는 정보</div><div id="v35CurrencySlot"></div><div id="v35WeatherSlot"></div><button class="v35-next-btn" onclick="v35Go(2)">숙소 →</button></div></section>
+<section class="v35-mobile-page"><div class="v35-page-shell"><div class="v35-page-title">🏨 숙소</div><div class="v35-page-sub">현재 숙소와 다음 숙소</div><div id="v35StaySlot"></div><button class="v35-next-btn" onclick="v35Go(3)">오늘의 일정 →</button></div></section>
+<section class="v35-mobile-page"><div class="v35-page-shell"><div class="v35-page-title">📅 오늘의 일정</div><div class="v35-page-sub">DAY 1 ~ DAY 13</div><div id="v35ScheduleSlot"></div><button class="v35-next-btn" onclick="v35Go(4)">함께 쓰는 여행방 →</button></div></section>
+<section class="v35-mobile-page"><div class="v35-page-shell"><div class="v35-page-title">👥 함께 쓰는 여행방</div><div class="v35-page-sub">참여자 · 공동경비 · 체크항목</div><div id="v35RoomSlot"></div><button class="v35-next-btn" onclick="v35Go(5)">공동 체크항목 →</button></div></section>
+<section class="v35-mobile-page"><div class="v35-page-shell"><div class="v35-page-title">☑️ 공동 체크항목</div><div class="v35-page-sub">여권 · 항공권 · 로밍 · 유심</div><div id="v33ChecklistMobile"></div><button class="v35-next-btn" onclick="v35Go(6)">가고 싶은 장소 →</button></div></section>
+<section class="v35-mobile-page"><div class="v35-page-shell"><div class="v35-page-title">📍 가고 싶은 장소</div><div class="v35-page-sub">날짜별 여행 아이디어</div><div class="card hotel-card"><div class="card-body">여행방에서 장소를 추가하면 이곳에 표시됩니다.</div></div><button class="v35-next-btn" onclick="v35Go(7)">🍜 먹고 싶은 메뉴 →</button></div></section>
+<section class="v35-mobile-page"><div class="v35-page-shell"><div class="v35-page-title">🍜 먹고 싶은 메뉴</div><div class="v35-page-sub">함께 고르고 싶은 메뉴</div><div class="card hotel-card"><div class="card-body"><div class="v33-food-grid"><span>🍲 쌀국수</span><span>🥞 반쎄오</span><span>🥩 와규</span><span>🍤 해산물</span><span>🍚 한식</span><span>🍕 피자</span></div></div></div><button class="v35-next-btn" onclick="v35Go(0)">✈️ 처음으로</button></div></section>
+<nav class="v35-page-nav"><button class="v35-nav-btn active" data-page="0"><span class="ico">✈️</span>항공권</button><button class="v35-nav-btn" data-page="1"><span class="ico">💱</span>환율/날씨</button><button class="v35-nav-btn" data-page="2"><span class="ico">🏨</span>숙소</button><button class="v35-nav-btn" data-page="3"><span class="ico">📅</span>일정</button><button class="v35-nav-btn" data-page="4"><span class="ico">👥</span>여행방</button></nav>
+</div></body></html>
