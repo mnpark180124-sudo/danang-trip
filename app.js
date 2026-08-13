@@ -2371,29 +2371,6 @@ function v34Render(){const t=v34Date(),cur=V34_STAYS.find(s=>t>=s.start&&t<s.end
 async function v34ApplySchedules(){const c=getSupabaseClient(),t=getCurrentTripId();if(!c||!t)return;const {data}=await c.from('trip_schedules').select('id,title').eq('trip_id',t).order('schedule_date').order('sort_order');if(!data||data.length!==13)return;const legacy=/^(✈️ 인천 → 다낭|🏨 Florence → Bel Marina|🏮 호이안 여행|🏨 Bel Marina → Hyatt|🏖️ Hyatt 휴식|🏨 Hyatt → Altara|🌴 다낭 시내|🍜 다낭 맛집 투어|🧖 마사지 & 휴식|🏝️ 바나힐 \/ 근교|📍 다낭 자유 일정|🛍️ 쇼핑 & 마지막 저녁|✈️ 다낭 → 인천)$/;if(!data.every(r=>legacy.test(r.title)))return;for(let i=0;i<13;i++)await c.from('trip_schedules').update({title:V34_ACTUAL_SCHEDULES[i][0],description:V34_ACTUAL_SCHEDULES[i][1],sort_order:0}).eq('id',data[i].id)}
 document.addEventListener('DOMContentLoaded',()=>{v34Render();setInterval(v34Render,60000);setTimeout(()=>v34ApplySchedules().catch(()=>{}),1500)});
 
-/* V3-5 mobile page navigation */
-(function(){
-let page=0,total=8;
-function mobile(){return matchMedia('(max-width:767.98px)').matches}
-function fill(id,sel){
- const a=document.getElementById(id),b=document.querySelector(sel);
- if(a&&b&&a.dataset.ready!=='1'){a.innerHTML='';a.appendChild(b.cloneNode(true));a.dataset.ready='1'}
-}
-window.v35Go=function(n){
- page=Math.max(0,Math.min(total-1,n));
- if(!mobile())return;
- document.querySelectorAll('.v35-mobile-page').forEach((x,i)=>x.classList.toggle('v35-active',i===page));
- document.querySelectorAll('.v35-nav-btn').forEach(x=>x.classList.toggle('active',+x.dataset.page===page));
- const d=document.getElementById('v35PageDots');if(d)d.innerHTML=Array.from({length:total},(_,i)=>`<i class="v35-dot ${i===page?'active':''}"></i>`).join('');
- fill('v35CurrencySlot','#currencyCard');fill('v35WeatherSlot','#weatherCard');fill('v35StaySlot','.hotel-card');fill('v35ScheduleSlot','#v33DayPlanner');fill('v35RoomSlot','#tripRoomCard');
- const c=document.getElementById('v33Checklist'),m=document.getElementById('v33ChecklistMobile');
- if(c&&m&&m.dataset.ready!=='1'){m.innerHTML=c.innerHTML;m.dataset.ready='1'}
- scrollTo({top:0,behavior:'smooth'});
-};
-document.addEventListener('click',e=>{const b=e.target.closest('.v35-nav-btn');if(b)v35Go(+b.dataset.page)});
-let sx=0,sy=0;
-document.addEventListener('touchstart',e=>{if(mobile()){sx=e.touches[0].clientX;sy=e.touches[0].clientY}},{passive:true});
-document.addEventListener('touchend',e=>{if(!mobile())return;let dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy))v35Go(page+(dx<0?1:-1))},{passive:true});
-function init(){document.body.classList.toggle('v35-mobile',mobile());if(mobile())v35Go(page)}
-addEventListener('resize',init);addEventListener('orientationchange',()=>setTimeout(init,100));document.addEventListener('DOMContentLoaded',()=>setTimeout(init,600));
-})();
+
+/* V3-5.1 safe mobile controller */
+(function(){"use strict";var s={page:0,total:8};function m(){return matchMedia("(max-width:767.98px)").matches}function render(){if(!m())return;document.querySelectorAll("#v35MobileApp .v35-mobile-page").forEach(function(x,i){x.classList.toggle("v35-active",i===s.page)});document.querySelectorAll("#v35MobileApp .v35-nav-btn").forEach(function(x){x.classList.toggle("active",+x.dataset.page===s.page)});var d=document.getElementById("v35PageDots");if(d)d.innerHTML=Array.from({length:s.total},(_,i)=>`<span class=\"v35-dot ${i===s.page?"active":""}\"></span>`).join("")}window.v35Go=function(n){s.page=Math.max(0,Math.min(s.total-1,Number(n)||0));try{document.body.classList.toggle("v35-mobile",m());render();if(m())scrollTo(0,0)}catch(e){document.body.classList.remove("v35-mobile")}};document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest(".v35-nav-btn");if(b){e.preventDefault();v35Go(+b.dataset.page)}});var sx=0,sy=0;document.addEventListener("touchstart",function(e){if(m()){sx=e.touches[0].clientX;sy=e.touches[0].clientY}},{passive:true});document.addEventListener("touchend",function(e){if(!m())return;var dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy))v35Go(s.page+(dx<0?1:-1))},{passive:true});function init(){try{document.body.classList.toggle("v35-mobile",m());render()}catch(e){document.body.classList.remove("v35-mobile")}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();addEventListener("resize",init);addEventListener("orientationchange",function(){setTimeout(init,100)})})();
