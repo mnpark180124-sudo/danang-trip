@@ -24,43 +24,306 @@
 
 
 <style>
-.v33-card { overflow:hidden; }
-.v33-section-title { display:flex; align-items:center; gap:8px; }
-.v33-section-title .v33-icon { font-size:1.2rem; }
-.v33-checklist { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
-.v33-check-item { display:flex; align-items:center; gap:9px; padding:13px 12px; border:1px solid #e4e7eb; border-radius:14px; background:#fff; cursor:pointer; transition:.15s ease; }
-.v33-check-item:active { transform:scale(.99); }
-.v33-check-item input { width:20px; height:20px; accent-color:#0B4F6C; flex:0 0 auto; }
-.v33-check-item .check-name { font-weight:700; }
-.v33-check-item.checked { background:#f2f7fa; border-color:#b9d2df; }
-.v33-check-item.checked .check-name { text-decoration:line-through; color:#71808a; }
-.v33-check-status { font-size:.78rem; color:#66737d; margin-top:8px; }
-.v33-daybar { display:grid; grid-template-columns:44px 1fr 44px; align-items:center; gap:8px; margin-bottom:12px; }
-.v33-day-arrow { width:44px; height:44px; border:1px solid #d7dfe4; border-radius:13px; background:#fff; font-size:1.25rem; color:#0B4F6C; }
-.v33-day-arrow:disabled { opacity:.35; }
-.v33-day-center { text-align:center; padding:8px 4px; }
-.v33-day-label { font-size:.78rem; color:#6b7780; }
-.v33-day-date { font-size:1.25rem; font-weight:800; color:#173f55; }
-.v33-day-sub { font-size:.78rem; color:#7a858c; margin-top:2px; }
-.v33-date-strip { display:flex; gap:7px; overflow-x:auto; padding:2px 2px 10px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
-.v33-date-strip::-webkit-scrollbar { display:none; }
-.v33-date-chip { flex:0 0 auto; min-width:58px; padding:8px 9px; border:1px solid #dfe5e9; border-radius:12px; background:#fff; text-align:center; color:#58656e; }
-.v33-date-chip .n { font-size:.72rem; }
-.v33-date-chip .d { font-size:.92rem; font-weight:800; margin-top:2px; }
-.v33-date-chip.active { background:#0B4F6C; border-color:#0B4F6C; color:#fff; }
-.v33-schedule { border:1px solid #e3e7ea; border-radius:16px; padding:14px; background:#fff; }
-.v33-schedule + .v33-schedule { margin-top:9px; }
-.v33-time { font-size:.72rem; font-weight:800; color:#0B4F6C; letter-spacing:.02em; margin-bottom:4px; }
-.v33-title { font-size:1rem; font-weight:800; }
-.v33-desc { margin-top:4px; font-size:.83rem; color:#69757d; line-height:1.45; }
-.v33-empty { padding:18px 12px; text-align:center; color:#7b858c; background:#f8fafb; border-radius:14px; }
-@media (max-width:420px) {
-  .v33-checklist { gap:7px; }
-  .v33-check-item { padding:11px 9px; font-size:.9rem; }
+/* ============================================================
+   V3-3 UI
+   ============================================================ */
+.v33-planner {
+  overflow: hidden;
+}
+
+.v33-planner-head {
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:16px;
+}
+
+.v33-kicker {
+  font-size:.72rem;
+  letter-spacing:.08em;
+  font-weight:800;
+  color:#0B4F6C;
+  margin-bottom:3px;
+}
+
+.v33-subtitle {
+  font-size:.82rem;
+  color:#6b7280;
+}
+
+.v33-live-dot {
+  display:flex;
+  align-items:center;
+  gap:5px;
+  font-size:.72rem;
+  color:#147a4b;
+  white-space:nowrap;
+}
+
+.v33-live-dot span {
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#22a06b;
+  display:inline-block;
+}
+
+.v33-check-card {
+  border:1px solid rgba(11,79,108,.14);
+  border-radius:16px;
+  padding:14px;
+  background:rgba(11,79,108,.045);
+  margin-bottom:18px;
+}
+
+.v33-section-head {
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.v33-section-head strong {
+  font-size:.78rem;
+  color:#0B4F6C;
+  white-space:nowrap;
+}
+
+.v33-section-title {
+  font-weight:800;
+  font-size:1rem;
+}
+
+.v33-section-desc {
+  font-size:.76rem;
+  color:#777;
+  margin-top:2px;
+}
+
+.v33-check-list {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+
+.v33-check-item {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-height:48px;
+  padding:10px 11px;
+  background:#fff;
+  border:1px solid #e1e5e9;
+  border-radius:12px;
+  cursor:pointer;
+  margin:0;
+  transition:.15s ease;
+}
+
+.v33-check-item input {
+  width:20px;
+  height:20px;
+  accent-color:#0B4F6C;
+  flex:0 0 auto;
+}
+
+.v33-check-item span:nth-child(2) {
+  font-weight:700;
+  font-size:.9rem;
+}
+
+.v33-check-item.is-checked {
+  background:#f0f8f5;
+  border-color:#b9decf;
+}
+
+.v33-check-item.is-checked span:nth-child(2) {
+  text-decoration:line-through;
+  color:#7b8a83;
+}
+
+.v33-check-mark {
+  margin-left:auto;
+  font-weight:900;
+  color:#147a4b;
+}
+
+.v33-day-nav {
+  display:grid;
+  grid-template-columns:48px 1fr 48px;
+  align-items:center;
+  gap:8px;
+  padding:8px 0 16px;
+}
+
+.v33-day-arrow {
+  width:48px;
+  height:48px;
+  border:1px solid #d9e0e5;
+  border-radius:50%;
+  background:#fff;
+  color:#0B4F6C;
+  font-size:2rem;
+  line-height:1;
+  cursor:pointer;
+}
+
+.v33-day-arrow:disabled {
+  opacity:.3;
+  cursor:not-allowed;
+}
+
+.v33-day-center {
+  text-align:center;
+}
+
+.v33-day-number {
+  font-family:var(--font-mono, monospace);
+  font-size:.9rem;
+  font-weight:800;
+  letter-spacing:.08em;
+  color:#0B4F6C;
+}
+
+.v33-date-label {
+  margin-top:2px;
+  font-size:1.08rem;
+  font-weight:800;
+}
+
+.v33-section {
+  border-top:1px solid #eceff1;
+  padding-top:16px;
+  margin-top:4px;
+}
+
+.v33-section-last {
+  padding-bottom:2px;
+}
+
+.v33-list {
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.v33-schedule-item,
+.v33-recommend-item {
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:11px 10px;
+  border:1px solid #e7eaed;
+  border-radius:12px;
+  background:#fff;
+}
+
+.v33-schedule-icon {
+  width:32px;
+  height:32px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#f3f6f8;
+  flex:0 0 auto;
+}
+
+.v33-schedule-body,
+.v33-recommend-main {
+  min-width:0;
+  flex:1;
+}
+
+.v33-schedule-title,
+.v33-recommend-title {
+  font-weight:750;
+  font-size:.91rem;
+  word-break:break-word;
+}
+
+.v33-schedule-desc,
+.v33-recommend-desc {
+  margin-top:3px;
+  color:#70757a;
+  font-size:.76rem;
+  line-height:1.4;
+  word-break:break-word;
+}
+
+.v33-vote {
+  border:1px solid #e2e5e8;
+  background:#fff;
+  border-radius:999px;
+  min-width:48px;
+  height:34px;
+  padding:0 9px;
+  color:#777;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.v33-vote.voted {
+  border-color:#f2b6b0;
+  background:#fff5f3;
+  color:#d94a3d;
+}
+
+.v33-mini-delete {
+  border:0;
+  background:transparent;
+  color:#a0a6aa;
+  font-size:1.25rem;
+  width:28px;
+  height:28px;
+  padding:0;
+  cursor:pointer;
+  flex:0 0 auto;
+}
+
+.v33-add-box {
+  display:grid;
+  gap:7px;
+  margin-top:10px;
+}
+
+.v33-add-box input {
+  font-size:.86rem;
+}
+
+.v33-loading,
+.v33-empty {
+  padding:15px 8px;
+  text-align:center;
+  color:#858b90;
+  font-size:.82rem;
+  line-height:1.5;
+}
+
+.v33-message {
+  min-height:22px;
+  margin-top:10px;
+  font-size:.82rem;
+}
+
+.v33-message.success { color:#147a4b; }
+.v33-message.error { color:#b42318; }
+.v33-message.info { color:#0B4F6C; }
+
+@media (max-width: 520px) {
+  .v33-check-list {
+    grid-template-columns:1fr;
+  }
+
+  .v33-planner-head {
+    align-items:center;
+  }
 }
 </style>
 
-</head><body>
+<style>.v34-stay-summary{margin:0 0 10px;padding:10px 12px;border:1px solid #e5e9ec;border-radius:12px;background:#f8fafb;font-size:.84rem}.v34-stay-status-wrap{min-height:30px;margin:5px 0 7px}.v34-stay-status{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;font-size:.75rem;font-weight:700}.v34-stay-status i{width:7px;height:7px;border-radius:50%;display:inline-block}.v34-stay-status.next{background:#eef6fb;color:#0B4F6C}.v34-stay-status.next i{background:#4b9bc2}.v34-stay-status.checkin,.v34-stay-status.checkout{background:#fff5e8;color:#9a5a00}.v34-stay-status.checkin i,.v34-stay-status.checkout i{background:#e59a2f}.v34-stay-status.current{background:#edf8f2;color:#147a4b}.v34-stay-status.current i{background:#22a06b}.v34-stay-status.done{background:#f1f2f3;color:#777}.v34-stay-status.done i{background:#9aa0a6}</style></head><body>
 <div class='container py-3'>
 
 <div id='installBanner' class='alert d-none align-items-center justify-content-between install-alert' role='alert'>
@@ -108,6 +371,111 @@
     <div id="tripMembers" class="trip-members">
       <span class="text-muted">아직 참여한 여행방이 없습니다.</span>
     </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     V3-3 · 날짜별 여행 플래너
+     ============================================================ -->
+<div id="v33Planner" class="card hotel-card mb-4 v33-planner">
+  <div class="card-body">
+
+    <div class="v33-planner-head">
+      <div>
+        <div class="v33-kicker">V3-3 · TOGETHER</div>
+        <h5 class="card-title mb-1">📅 <span id="v33TripName">여행 일정</span></h5>
+        <div id="v33TotalDays" class="v33-subtitle">여행 기간</div>
+      </div>
+      <div class="v33-live-dot"><span></span>공동 사용</div>
+    </div>
+
+    <!-- 공동 체크리스트 -->
+    <div class="v33-check-card">
+      <div class="v33-section-head">
+        <div>
+          <div class="v33-section-title">☑️ 출발 전 체크</div>
+          <div class="v33-section-desc">한 사람이 체크하면 모두에게 반영됩니다.</div>
+        </div>
+        <strong id="v33ChecklistCount">0 / 4 완료</strong>
+      </div>
+
+      <div id="v33Checklist" class="v33-check-list">
+        <div class="v33-loading">체크리스트를 불러오는 중...</div>
+      </div>
+    </div>
+
+    <!-- 날짜 네비게이션 -->
+    <div class="v33-day-nav">
+      <button id="v33PrevDay" class="v33-day-arrow" onclick="v33ChangeDay(-1)" aria-label="이전 날짜">‹</button>
+      <div class="v33-day-center">
+        <div id="v33DayNumber" class="v33-day-number">DAY 1</div>
+        <div id="v33DateLabel" class="v33-date-label">날짜를 불러오는 중...</div>
+      </div>
+      <button id="v33NextDay" class="v33-day-arrow" onclick="v33ChangeDay(1)" aria-label="다음 날짜">›</button>
+    </div>
+
+    <!-- 일정 -->
+    <div class="v33-section">
+      <div class="v33-section-head">
+        <div>
+          <div class="v33-section-title">🗓️ 오늘 일정</div>
+          <div class="v33-section-desc">여행방 참여자 모두가 일정을 추가할 수 있어요.</div>
+        </div>
+      </div>
+
+      <div id="v33ScheduleList" class="v33-list">
+        <div class="v33-loading">일정을 불러오는 중...</div>
+      </div>
+
+      <div class="v33-add-box">
+        <input id="v33ScheduleTitle" class="form-control" maxlength="80" placeholder="예: 호이안 올드타운 산책">
+        <input id="v33ScheduleDesc" class="form-control" maxlength="120" placeholder="메모 · 시간 · 장소 등 (선택)">
+        <button class="btn btn-primary btn-round w-100" onclick="v33AddSchedule()">＋ 일정 추가</button>
+      </div>
+    </div>
+
+    <!-- 장소 -->
+    <div class="v33-section">
+      <div class="v33-section-head">
+        <div>
+          <div class="v33-section-title">📍 가고 싶은 장소</div>
+          <div class="v33-section-desc">❤️가 많은 장소를 우선순위로 정해보세요.</div>
+        </div>
+      </div>
+
+      <div id="v33PlaceList" class="v33-list">
+        <div class="v33-loading">장소를 불러오는 중...</div>
+      </div>
+
+      <div class="v33-add-box">
+        <input id="v33PlaceName" class="form-control" maxlength="80" placeholder="예: 안방비치">
+        <input id="v33PlaceDesc" class="form-control" maxlength="120" placeholder="가고 싶은 이유 (선택)">
+        <button class="btn btn-outline-primary btn-round w-100" onclick="v33AddPlace()">＋ 가고 싶은 장소 추가</button>
+      </div>
+    </div>
+
+    <!-- 메뉴 -->
+    <div class="v33-section v33-section-last">
+      <div class="v33-section-head">
+        <div>
+          <div class="v33-section-title">🍜 먹고 싶은 메뉴</div>
+          <div class="v33-section-desc">여행 중 먹을 메뉴를 미리 모아보세요.</div>
+        </div>
+      </div>
+
+      <div id="v33FoodList" class="v33-list">
+        <div class="v33-loading">메뉴를 불러오는 중...</div>
+      </div>
+
+      <div class="v33-add-box">
+        <input id="v33FoodName" class="form-control" maxlength="80" placeholder="예: 반쎄오">
+        <input id="v33FoodDesc" class="form-control" maxlength="120" placeholder="맛집/메모 (선택)">
+        <button class="btn btn-outline-primary btn-round w-100" onclick="v33AddFood()">＋ 먹고 싶은 메뉴 추가</button>
+      </div>
+    </div>
+
+    <div id="v33Message" class="v33-message"></div>
+
   </div>
 </div>
 
@@ -321,47 +689,6 @@
   </div>
 </div>
 
-
-<!-- ============================================================
-     V3-3-1 · 공동 체크리스트
-     ============================================================ -->
-<div id="v33Planner" class="card hotel-card mb-4 v33-card">
-  <div class="card-body">
-    <h5 class="card-title mb-3 v33-section-title">
-      <span class="v33-icon">☑️</span> 출발 전 공동 체크
-    </h5>
-    <div id="v33Checklist" class="v33-checklist">
-      <div class="text-muted">체크리스트를 불러오는 중...</div>
-    </div>
-    <div id="v33ChecklistStatus" class="v33-check-status"></div>
-  </div>
-</div>
-
-<!-- ============================================================
-     V3-3-1 · 날짜별 여행 플래너
-     ============================================================ -->
-<div id="v33DayPlanner" class="card hotel-card mb-4 v33-card">
-  <div class="card-body">
-    <h5 class="card-title mb-3 v33-section-title">
-      <span class="v33-icon">📅</span> 날짜별 여행 일정
-    </h5>
-    <div id="v33DateStrip" class="v33-date-strip"></div>
-    <div class="v33-daybar">
-      <button id="v33PrevDay" class="v33-day-arrow" type="button" aria-label="이전 날짜">‹</button>
-      <div class="v33-day-center">
-        <div id="v33DayLabel" class="v33-day-label">DAY 1</div>
-        <div id="v33DayDate" class="v33-day-date">-</div>
-        <div id="v33DaySub" class="v33-day-sub">-</div>
-      </div>
-      <button id="v33NextDay" class="v33-day-arrow" type="button" aria-label="다음 날짜">›</button>
-    </div>
-    <div id="v33ScheduleList">
-      <div class="v33-empty">일정을 불러오는 중...</div>
-    </div>
-    <div class="small text-muted text-center mt-3">← → 버튼이나 날짜를 눌러 여행 날짜를 넘겨보세요.</div>
-  </div>
-</div>
-
 <div class='hero mb-4'><h2>🏝 Da Nang Travel</h2><div>🌤 Weather | 💱 Exchange | 🚖 Grab</div></div>
 
 <!-- 항공권 -->
@@ -424,7 +751,8 @@
     <div class='col-6'>
       <button class='btn btn-outline-primary w-100 btn-round py-2' onclick="openMaps('Da Nang, Vietnam')"><i class='bi bi-geo-alt'></i> 구글맵 열기</button>
     </div>
-    <div class='col-6'>
+    <div class="v34-stay-summary" id="v34StaySummary">숙소 상태 확인 중...</div>
+<div class='col-6'>
       <button class='btn btn-outline-danger w-100 btn-round py-2' onclick='openGrab()'><i class='bi bi-car-front'></i> Grab 호출</button>
     </div>
   </div>
@@ -432,28 +760,28 @@
 
 <h5 class='mb-3'><i class='bi bi-signpost-split'></i> 숙소 · 이동 순서</h5>
 <div class='card hotel-card'><div class='card-body'>
-  <div class='stay-open-row'><a class='btn btn-primary btn-round btn-sm' href='pages/florence.html'>열기</a></div>
+  <div class='stay-open-row' data-v34-stay="Florence"><div class="v34-stay-status-wrap"></div><a class='btn btn-primary btn-round btn-sm' href='pages/florence.html'>열기</a></div>
   <h4 class='mb-0'>🏨 Florence</h4>
   <p class='mb-0 text-muted small'>8 Nại Nam 8, Hòa Cường, Đà Nẵng · 8/23–8/24</p>
   <p class='mb-0 landmark-line'>🛒 롯데마트 48m · 🐉 용다리 2.9km · ✈️ 다낭공항 3.4km</p>
 </div></div>
 <div class='timeline-arrow'>↓</div>
 <div class='card hotel-card'><div class='card-body'>
-  <div class='stay-open-row'><a class='btn btn-primary btn-round btn-sm' href='pages/belmarina.html'>열기</a></div>
+  <div class='stay-open-row' data-v34-stay="Bel Marina"><div class="v34-stay-status-wrap"></div><a class='btn btn-primary btn-round btn-sm' href='pages/belmarina.html'>열기</a></div>
   <h4 class='mb-0'>🏨 Bel Marina</h4>
   <p class='mb-0 text-muted small'>127 Nguyễn Phúc Tần, Hội An · 8/24–8/27</p>
   <p class='mb-0 landmark-line'>🏮 호이안 구시가지 1.8km · 🏖️ 안방비치 5.7km</p>
 </div></div>
 <div class='timeline-arrow'>↓</div>
 <div class='card hotel-card'><div class='card-body'>
-  <div class='stay-open-row'><a class='btn btn-primary btn-round btn-sm' href='pages/hyatt.html'>열기</a></div>
+  <div class='stay-open-row' data-v34-stay="Hyatt"><div class="v34-stay-status-wrap"></div><a class='btn btn-primary btn-round btn-sm' href='pages/hyatt.html'>열기</a></div>
   <h4 class='mb-0'>🏨 Hyatt</h4>
   <p class='mb-0 text-muted small'>5 Truong Sa Street · 8/27–8/29</p>
   <p class='mb-0 landmark-line'>🏖️ 해변 바로 앞 · ⛰️ 오행산 841m</p>
 </div></div>
 <div class='timeline-arrow'>↓</div>
 <div class='card hotel-card mb-4'><div class='card-body'>
-  <div class='stay-open-row'><a class='btn btn-primary btn-round btn-sm' href='pages/altara.html'>열기</a></div>
+  <div class='stay-open-row' data-v34-stay="Altara"><div class="v34-stay-status-wrap"></div><a class='btn btn-primary btn-round btn-sm' href='pages/altara.html'>열기</a></div>
   <h4 class='mb-0'>🏨 Altara</h4>
   <p class='mb-0 text-muted small'>120 Võ Nguyên Giáp · 8/29–9/5</p>
   <p class='mb-0 landmark-line'>🏖️ 미케비치 2.6km · 🐉 용다리 2.6km · 🛍️ 한시장 2.8km</p>

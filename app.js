@@ -2360,73 +2360,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 300);
 });
 
-// ============================================================
-// V3-3 FINAL
-// ============================================================
-const V33_DEFAULT_CHECKS = [
-  ['passport','🛂','여권'], ['flight','✈️','항공권'],
-  ['roaming','📱','로밍'], ['sim','📶','유심 / eSIM']
-];
-const V33_DEFAULT_FOODS = ['🍲 쌀국수','🥞 반쎄오','🥩 와규','🍤 해산물','🍚 한식','🍕 피자'];
-const V33_STAY_EVENTS = {
-  '2026-08-23':'🟢 Florence Hotel 체크인',
-  '2026-08-24':'🔴 Florence Hotel 체크아웃 → 🟢 Bel Marina 체크인',
-  '2026-08-27':'🔴 Bel Marina 체크아웃 → 🟢 Hyatt 체크인',
-  '2026-08-29':'🔴 Hyatt 체크아웃 → 🟢 Altara 체크인',
-  '2026-09-04':'🔴 Altara 체크아웃 → ✈️ KE460 귀국'
-};
-function v33DatesFinal(){
-  const a=[],d=new Date('2026-08-23T12:00:00'),e=new Date('2026-09-04T12:00:00');
-  while(d<=e){a.push(d.toISOString().slice(0,10));d.setDate(d.getDate()+1)} return a;
-}
-async function v33FinalChecklist(){
-  const c=getSupabaseClient(),t=getCurrentTripId(),el=document.getElementById('v33Checklist');
-  if(!c||!t||!el)return;
-  const {data,error}=await c.from('trip_checklist').select('*').eq('trip_id',t);
-  if(error){el.innerHTML='<div class="v33-empty">체크리스트를 불러오지 못했습니다.</div>';return}
-  const m=new Map((data||[]).map(x=>[x.item_key,x]));
-  el.innerHTML=V33_DEFAULT_CHECKS.map(([k,i,n])=>{const x=m.get(k)||{};return `<button type="button" class="v33-check-item ${x.checked?'checked':''}" onclick="v33FinalToggle('${k}',${!x.checked})"><span class="v33-box">${x.checked?'✓':''}</span><span>${i}</span><span class="check-name">${n}</span></button>`}).join('');
-  const s=document.getElementById('v33ChecklistStatus');if(s)s.textContent=`${V33_DEFAULT_CHECKS.filter(x=>m.get(x[0])?.checked).length} / 4 완료`;
-}
-async function v33FinalToggle(key,checked){
-  const c=getSupabaseClient(),t=getCurrentTripId();if(!c||!t)return;
-  const r=await c.from('trip_checklist').update({checked,updated_at:new Date().toISOString()}).eq('trip_id',t).eq('item_key',key);
-  if(r.error) console.warn('체크 저장:',r.error);
-  await v33FinalChecklist();
-}
-async function v33FinalSchedules(t){
-  const c=getSupabaseClient();if(!c||!t)return;
-  const {count}=await c.from('trip_schedules').select('id',{count:'exact',head:true}).eq('trip_id',t);
-  if((count||0)>0)return;
-  const rows=v33DatesFinal().map((date,i)=>({trip_id:t,schedule_date:date,sort_order:0,
-    title:V33_STAY_EVENTS[date]||'🏝 다낭 자유 일정',
-    description:date==='2026-08-23'?'대한항공 KE459 · 18:20 출발 → 21:05 도착':
-      date==='2026-09-04'?'대한항공 KE460 · 22:55 출발':'가고 싶은 장소와 먹고 싶은 메뉴를 추가하세요.'}));
-  await c.from('trip_schedules').insert(rows);
-}
-async function initV33Final(){
-  if(!document.getElementById('v33DayPlanner'))return;
-  try{
-    await ensureAnonymousSession();const t=getCurrentTripId();if(!t)return;
-    await v33FinalSchedules(t);await v33FinalChecklist();
-    const dates=v33DatesFinal();let i=0;
-    const render=async()=>{
-      const strip=document.getElementById('v33DateStrip');
-      strip.innerHTML=dates.map((d,n)=>{const x=new Date(d+'T12:00:00');return `<button type="button" class="v33-date-chip ${n===i?'active':''}" data-i="${n}"><div class="n">DAY ${n+1}</div><div class="d">${x.getMonth()+1}/${x.getDate()}</div></button>`}).join('');
-      strip.querySelectorAll('.v33-date-chip').forEach(b=>b.onclick=async()=>{i=+b.dataset.i;await render()});
-      const d=dates[i],x=new Date(d+'T12:00:00');
-      document.getElementById('v33DayLabel').textContent=`DAY ${i+1}`;
-      document.getElementById('v33DayDate').textContent=x.toLocaleDateString('ko-KR',{month:'long',day:'numeric'});
-      document.getElementById('v33DaySub').textContent=V33_STAY_EVENTS[d]||'다낭 자유 일정';
-      document.getElementById('v33PrevDay').disabled=i===0;document.getElementById('v33NextDay').disabled=i===dates.length-1;
-      document.getElementById('v33PrevDay').onclick=async()=>{if(i){i--;await render()}};
-      document.getElementById('v33NextDay').onclick=async()=>{if(i<dates.length-1){i++;await render()}};
-      const {data,error}=await getSupabaseClient().from('trip_schedules').select('*').eq('trip_id',t).eq('schedule_date',d).order('sort_order');
-      const list=document.getElementById('v33ScheduleList');
-      list.innerHTML=error?'<div class="v33-empty">일정을 불러오지 못했습니다.</div>':(data||[]).map(r=>`<div class="v33-schedule"><div class="v33-title">${escapeHtml(r.title)}</div><div class="v33-desc">${escapeHtml(r.description||'')}</div></div>`).join('')||'<div class="v33-empty">등록된 일정이 없습니다.</div>';
-    };
-    await render();
-  }catch(e){console.error('V3-3 초기화 실패:',e)}
-}
-window.v33FinalToggle=v33FinalToggle;
-document.addEventListener('DOMContentLoaded',()=>setTimeout(initV33Final,500));
+// V3-4 actual itinerary + hotel status
+const V34_STAYS=[{name:"Florence",start:"2026-08-23",end:"2026-08-24"},{name:"Bel Marina",start:"2026-08-24",end:"2026-08-27"},{name:"Hyatt",start:"2026-08-27",end:"2026-08-29"},{name:"Altara",start:"2026-08-29",end:"2026-09-04"}];
+const V34_ACTUAL_SCHEDULES=[
+["✈️ 인천 → 다낭 · Florence 체크인","18:20 KE459 → 21:05 도착 · Florence 체크인 · 휴식"],["🏮 호이안 올드타운 · Bel Marina","Florence 체크아웃 → 호이안 이동 → Bel Marina 체크인 · 올드타운 · 야시장"],["🏖️ 안방비치 · 코코넛배","안방비치 → 코코넛배 체험 후보 → 카페/마사지 → 호이안 저녁"],["🌴 호이안 자유 일정","Bel Marina 숙박 · 원하는 장소/맛집 투표 · 자유 일정"],["🏨 Bel Marina 체크아웃 → Hyatt","Bel Marina 체크아웃 → 다낭 이동 → Hyatt 체크인 · 리조트 휴식"],["⛰️ 오행산 · Hyatt 휴식","오행산 방문 후보 → 점심 → Hyatt 수영/해변 · 저녁"],["🏨 Hyatt 체크아웃 → Altara","Hyatt 체크아웃 → 미케비치 → Altara 체크인 · 해산물 저녁"],["🏝️ 바나힐 하루 일정","바나힐/골든브릿지 → 오후 다낭 복귀 → 휴식"],["🌊 선짜반도 · 린응사 · 미케비치","선짜반도/린응사 → 미케비치 → 카페/마사지"],["🛍️ 한시장 · 용다리 · 다낭 시내","한시장 쇼핑 → 점심 → 용다리 → 카페 · 저녁 맛집"],["🍜 맛집 · 마사지 · 자유 일정","투표한 메뉴 우선 방문 → 마사지 → 숙소 휴식"],["🛒 롯데마트 · 마지막 쇼핑","기념품/선물 쇼핑 → 롯데마트 → 마지막 저녁 · 짐 정리"],["✈️ Altara 체크아웃 → 인천","체크아웃 → 마지막 식사/카페 → 공항 → 22:55 KE460"]];
+function v34Date(d=new Date()){return d.toISOString().slice(0,10)}
+function v34Diff(a,b){return Math.round((new Date(b+'T12:00')-new Date(a+'T12:00'))/86400000)}
+function v34Status(s,t=v34Date()){if(t<s.start)return ['next','D-'+v34Diff(t,s.start)];if(t===s.start)return ['checkin','오늘 체크인'];if(t<s.end)return ['current','숙박중'];if(t===s.end)return ['checkout','오늘 체크아웃'];return ['done','숙박 종료']}
+function v34Render(){const t=v34Date(),cur=V34_STAYS.find(s=>t>=s.start&&t<s.end),next=V34_STAYS.find(s=>s.start>t);document.querySelectorAll('[data-v34-stay]').forEach(c=>{const s=V34_STAYS.find(x=>x.name===c.dataset.v34Stay),b=c.querySelector('.v34-stay-status-wrap');if(s&&b){const [type,label]=v34Status(s,t);b.innerHTML=`<span class="v34-stay-status ${type}"><i></i>${type==='current'?'현재 숙소':type==='next'?'다음 숙소':type==='checkin'?'오늘 체크인':type==='checkout'?'오늘 체크아웃':'숙박 종료'} · <b>${label}</b></span>`}});const sum=document.getElementById('v34StaySummary');if(sum)sum.innerHTML=cur?`🟢 지금 <b>${cur.name}</b> 숙박중`+(next?`　→　🔵 다음 <b>${next.name}</b> ${v34Status(next,t)[1]}`:''):next?`🔵 다음 숙소 <b>${next.name}</b> ${v34Status(next,t)[1]}`:'여행 일정 종료'}
+async function v34ApplySchedules(){const c=getSupabaseClient(),t=getCurrentTripId();if(!c||!t)return;const {data}=await c.from('trip_schedules').select('id,title').eq('trip_id',t).order('schedule_date').order('sort_order');if(!data||data.length!==13)return;const legacy=/^(✈️ 인천 → 다낭|🏨 Florence → Bel Marina|🏮 호이안 여행|🏨 Bel Marina → Hyatt|🏖️ Hyatt 휴식|🏨 Hyatt → Altara|🌴 다낭 시내|🍜 다낭 맛집 투어|🧖 마사지 & 휴식|🏝️ 바나힐 \/ 근교|📍 다낭 자유 일정|🛍️ 쇼핑 & 마지막 저녁|✈️ 다낭 → 인천)$/;if(!data.every(r=>legacy.test(r.title)))return;for(let i=0;i<13;i++)await c.from('trip_schedules').update({title:V34_ACTUAL_SCHEDULES[i][0],description:V34_ACTUAL_SCHEDULES[i][1],sort_order:0}).eq('id',data[i].id)}
+document.addEventListener('DOMContentLoaded',()=>{v34Render();setInterval(v34Render,60000);setTimeout(()=>v34ApplySchedules().catch(()=>{}),1500)});
