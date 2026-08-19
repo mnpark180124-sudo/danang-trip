@@ -360,6 +360,21 @@ body.v35-mobile #v35MobileApp{display:block!important}
 }
 </style>
 
+
+<style id="v354-fix">
+@media (max-width:767.98px){
+  html,body{overflow-x:hidden!important}
+  body{padding-bottom:84px!important}
+  .container.py-3 > *:not(#v35MobileApp):not(#installBanner){display:none!important}
+  #installBanner{display:none!important}
+  #v35MobileApp{display:block!important;position:relative!important;z-index:100!important;width:100%!important;margin:0!important;padding:0!important}
+  #v35MobileApp .v35-mobile-page{display:none!important}
+  #v35MobileApp .v35-mobile-page.v35-active{display:block!important}
+  #v35MobileApp .v35-page-nav{position:fixed!important;left:0!important;right:0!important;bottom:0!important;z-index:2147483647!important;pointer-events:auto!important}
+  #v35MobileApp .v35-nav-btn{pointer-events:auto!important;touch-action:manipulation!important;position:relative!important;z-index:2147483648!important}
+}
+</style>
+
 </head><body>
 <div class='container py-3'>
 
@@ -906,6 +921,48 @@ body.v35-mobile #v35MobileApp{display:block!important}
     if(Math.abs(dx)>70 && Math.abs(dx)>Math.abs(dy)){
       window.v35Go(page+(dx<0?1:-1));
     }
+  },{passive:true});
+})();
+</script>
+
+
+<script id="v354-fix-controller">
+(function(){
+  "use strict";
+  var current=0,total=8;
+  function render(){
+    var root=document.getElementById("v35MobileApp");
+    if(!root)return;
+    var pages=root.querySelectorAll(".v35-mobile-page");
+    for(var i=0;i<pages.length;i++)pages[i].classList.toggle("v35-active",i===current);
+    var buttons=root.querySelectorAll(".v35-nav-btn");
+    for(var j=0;j<buttons.length;j++)buttons[j].classList.toggle("active",Number(buttons[j].getAttribute("data-page"))===current);
+    var dots=document.getElementById("v35PageDots");
+    if(dots){
+      var html="";
+      for(var k=0;k<total;k++)html+='<span class="v35-dot '+(k===current?"active":"")+'"></span>';
+      dots.innerHTML=html;
+    }
+  }
+  window.v35Go=function(n){
+    n=parseInt(n,10); if(isNaN(n))n=0;
+    current=Math.max(0,Math.min(total-1,n));
+    render();
+    if(window.innerWidth<=767)window.scrollTo(0,0);
+  };
+  function init(){document.body.classList.add("v35-mobile");render();}
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
+  window.addEventListener("resize",render);
+  window.addEventListener("orientationchange",function(){setTimeout(render,100);});
+  var sx=0,sy=0;
+  document.addEventListener("touchstart",function(e){
+    if(window.innerWidth>767||!e.touches[0])return;
+    sx=e.touches[0].clientX;sy=e.touches[0].clientY;
+  },{passive:true});
+  document.addEventListener("touchend",function(e){
+    if(window.innerWidth>767||!e.changedTouches[0])return;
+    var dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy))window.v35Go(current+(dx<0?1:-1));
   },{passive:true});
 })();
 </script>
