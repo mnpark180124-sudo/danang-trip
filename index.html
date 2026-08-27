@@ -967,4 +967,132 @@ body.v35-mobile #v35MobileApp{display:block!important}
 })();
 </script>
 
+
+
+
+
+
+
+
+<script id="v354-content-bridge-fix4">
+(function(){
+"use strict";
+
+function pageShell(n){
+  var pages=document.querySelectorAll("#v35MobileApp .v35-mobile-page");
+  return pages[n] ? pages[n].querySelector(".v35-page-shell") : null;
+}
+function move(el,target,before){
+  if(el && target){
+    if(before) target.insertBefore(el,before);
+    else target.appendChild(el);
+  }
+}
+function findCardByText(text){
+  var cards=document.querySelectorAll(".container.py-3 > .card");
+  for(var i=0;i<cards.length;i++){
+    if((cards[i].textContent||"").indexOf(text)>=0) return cards[i];
+  }
+  return null;
+}
+function findSectionByTitle(text){
+  var secs=document.querySelectorAll(".v33-section");
+  for(var i=0;i<secs.length;i++){
+    if((secs[i].textContent||"").indexOf(text)>=0) return secs[i];
+  }
+  return null;
+}
+
+function init(){
+  try{
+    var p1=pageShell(1), p2=pageShell(2), p3=pageShell(3),
+        p4=pageShell(4), p5=pageShell(5), p6=pageShell(6), p7=pageShell(7);
+
+    /* 공동 체크: 실제 V3-3 체크카드 전체를 이동 */
+    var checklist=document.querySelector(".v33-check-card");
+    var checkSlot=document.getElementById("v33ChecklistMobile");
+    if(checklist && checkSlot){
+      checkSlot.innerHTML="";
+      move(checklist,checkSlot);
+    }
+
+    /* 환율/날씨: 실제 카드 자체를 이동 (기존 API/ID/이벤트 보존) */
+    var fx=findCardByText("실시간 환율 계산기");
+    var weather=findCardByText("다낭 날씨");
+    move(fx,document.getElementById("v35CurrencySlot"));
+    move(weather,document.getElementById("v35WeatherSlot"));
+
+    /* 일정/장소/메뉴: 실제 V3-3 섹션 전체를 이동 */
+    var sched=findSectionByTitle("🗓️ 오늘 일정");
+    var place=findSectionByTitle("📍 가고 싶은 장소");
+    var food=findSectionByTitle("🍜 먹고 싶은 메뉴");
+    move(sched,document.getElementById("v35ScheduleSlot"));
+    move(place,p4);
+    move(food,p5);
+
+    /* 일정 날짜 네비게이션을 일정 페이지 위로 이동 */
+    var dayNav=document.querySelector(".v33-day-nav");
+    if(dayNav) move(dayNav,document.getElementById("v35ScheduleSlot"),sched);
+
+    /* 장소/메뉴는 각 페이지의 다음 버튼 바로 앞에 오도록 정리 */
+    if(place && p4){
+      var next4=p4.querySelector(".v35-next-btn");
+      if(next4) p4.insertBefore(place,next4);
+    }
+    if(food && p5){
+      var next5=p5.querySelector(".v35-next-btn");
+      if(next5) p5.insertBefore(food,next5);
+    }
+
+    /* 숙소: 기존 V3-4 카드/상태 UI를 그대로 이동 */
+    var staySlot=document.getElementById("v35StaySlot");
+    var staySummary=document.getElementById("v34StaySummary");
+    if(staySlot){
+      staySlot.innerHTML="";
+      if(staySummary){
+        var summaryCard=staySummary.closest(".card");
+        move(summaryCard,staySlot);
+      }
+      ["Florence","Bel Marina","Hyatt","Altara"].forEach(function(name){
+        var marker=document.querySelector('[data-v34-stay="'+name+'"]');
+        if(marker){
+          var card=marker.closest(".card");
+          if(card) move(card,staySlot);
+        }
+      });
+    }
+
+    /* 여행방: 기존 V3-1 방 + V3-2 공동경비를 그대로 이동 */
+    var room=document.getElementById("v35RoomSlot");
+    var trip=document.getElementById("tripRoom");
+    var expense=document.getElementById("expenseRoom");
+    if(room){
+      room.innerHTML="";
+      move(trip,room);
+      move(expense,room);
+    }
+
+    /* 모바일에서 원래 숨김 영역의 높이/레이아웃이 영향을 주지 않도록 */
+    if(window.innerWidth<=767){
+      document.body.classList.add("v35-mobile");
+      window.scrollTo(0,0);
+    }
+  }catch(err){
+    console.error("V3-5.4 FIX4:",err);
+  }
+}
+
+/* Supabase/V3-3 초기화가 끝난 뒤 DOM을 이동 */
+function run(){
+  setTimeout(init,1200);
+  setTimeout(init,2500);
+}
+if(document.readyState==="loading"){
+  document.addEventListener("DOMContentLoaded",run,{once:true});
+}else{
+  run();
+}
+})();
+</script>
+
 </body></html>
